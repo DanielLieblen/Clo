@@ -56,7 +56,7 @@ class VerificarNumeroScreen extends StatelessWidget {
 
   // Widget para criar as caixas de inserção do código
   Widget _buildCodeBox() {
-    return SizedBox(
+    return const SizedBox(
       width: 50,
       child: TextField(
         decoration: InputDecoration(

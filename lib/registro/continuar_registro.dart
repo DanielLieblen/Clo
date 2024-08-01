@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:clo/registro/verificar_numero.dart';
+import 'package:flutter/material.dart';
 
 class ContinuarRegistroScreen extends StatelessWidget {
+  const ContinuarRegistroScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +21,7 @@ class ContinuarRegistroScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             // Campo para nome
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 labelText: 'Por favor, digite seu nome',
                 border: OutlineInputBorder(),
@@ -27,7 +29,7 @@ class ContinuarRegistroScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             // Campo para sobrenome
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 labelText: 'Por favor, digite seu sobrenome',
                 border: OutlineInputBorder(),
@@ -50,13 +52,15 @@ class ContinuarRegistroScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => VerificarNumeroScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => VerificarNumeroScreen()),
                 );
               },
-              child: const Text('Finalizar registro'),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50), // Botão de largura cheia
+                minimumSize:
+                    Size(double.infinity, 50), // Botão de largura cheia
               ),
+              child: const Text('Finalizar registro'),
             ),
           ],
         ),
