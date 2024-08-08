@@ -59,7 +59,7 @@ class _SwiperButtonState extends State<SwiperButton>
       child: Stack(
         children: [
           // Background arc (upward curve)
-          Container(
+          SizedBox(
             width: double.infinity, // Occupy full width
             height: 10.0,
             child: CustomPaint(

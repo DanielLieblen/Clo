@@ -31,9 +31,9 @@ class LoginPhoneScreen extends StatelessWidget {
               onPressed: () {
                 // Implementar a lógica de login por telefone
               },
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             const Text('ou'),
             IconButton(
               icon: Image.asset('assets/google_logo.png'), // Substitua pelo caminho correto do seu logo

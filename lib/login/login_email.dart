@@ -29,7 +29,7 @@ class RegistrationPage extends StatelessWidget {
               onPressed: () {
                 // Lógica para processar o registro
               },
-              child: Text('SIGN UP'),
+              child: const Text('SIGN UP'),
             ),
             Image.asset('assets/google_logo.png'), // Seu logotipo do Google
           ],

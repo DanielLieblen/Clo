@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../onboarding/onboarding_screen1.dart'; // Import the onboarding screen
 import 'package:clo/tela_abertura_swipe/swipper_button_direita.dart';
-import 'package:animated_widgets/animated_widgets.dart';
 import 'dart:math' as math; // Import the math library
 
 class TelaAbertura extends StatefulWidget {

@@ -1,5 +1,5 @@
-import 'package:clo/registro/continuar_registro.dart';
-import 'package:clo/registro/registro_telefone.dart';
+import 'package:clo/registro/cellphone/registro_telefone.dart';
+import 'package:clo/registro/email/continuar_registro.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -78,7 +78,7 @@ class LoginScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              ContinuarRegistroScreen()), // Navegação para tela de login
+                              const ContinuarRegistroScreen()), // Navegação para tela de login
                     );
                     // Adicione a navegação para a tela de login aqui
                   },
