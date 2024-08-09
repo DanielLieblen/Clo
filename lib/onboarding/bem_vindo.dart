@@ -1,3 +1,4 @@
+import 'package:clo/login/login.dart';
 import 'package:clo/registro/email/registro.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -73,11 +74,12 @@ class BemVindoScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: OutlinedButton(
                   onPressed: () {
+                    print("alguma coisa");
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              const BemVindoScreen()), // Navegação para tela de login
+                              const LoginScreen()), // Navegação para tela de login
                     );
                     // Adicione a navegação para a tela de login aqui
                   },

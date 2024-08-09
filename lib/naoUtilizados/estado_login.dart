@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class EstadoLoginScreen extends StatefulWidget {
+  const EstadoLoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _EstadoLoginScreenState createState() => _EstadoLoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _EstadoLoginScreenState extends State<EstadoLoginScreen> {
   bool _isEmail = true; // Inicialmente, o campo é de e-mail
 
   @override

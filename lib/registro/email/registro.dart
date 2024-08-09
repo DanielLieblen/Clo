@@ -11,6 +11,44 @@ class RegistroScreen extends StatefulWidget {
 
 class _RegistroScreenState extends State<RegistroScreen> {
   bool _isEmailSelected = true;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _senhaController = TextEditingController();
+  final TextEditingController _telefoneController = TextEditingController();
+  bool _isFormValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_validateForm);
+    _senhaController.addListener(_validateForm);
+    _telefoneController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    setState(() {
+      if (_isEmailSelected) {
+        _isFormValid = _isValidEmail(_emailController.text) &&
+            _isValidSenha(_senhaController.text);
+      } else {
+        _isFormValid = _isValidTelefone(_telefoneController.text);
+      }
+    });
+  }
+
+  bool _isValidEmail(String email) {
+    // Verifica se o email contém apenas letras
+    return RegExp(r'^[a-zA-Z]+$').hasMatch(email);
+  }
+
+  bool _isValidSenha(String senha) {
+    // Verifica se a senha contém apenas números
+    return RegExp(r'^\d+$').hasMatch(senha);
+  }
+
+  bool _isValidTelefone(String telefone) {
+    // Verifica se o telefone contém apenas números
+    return RegExp(r'^\d+$').hasMatch(telefone);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,20 +74,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 60), // Aumentando o espaço acima
+            const SizedBox(height: 60),
             const Text(
               'Oi, seja bem vindo',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const SizedBox(height: 40), // Espaço maior abaixo do título
+            const SizedBox(height: 40),
             _buildSwipeButton(),
-            const SizedBox(
-                height: 40), // Espaço maior entre o swipe e o formulário
+            const SizedBox(height: 40),
             _isEmailSelected ? _buildEmailForm() : _buildTelefoneForm(),
-            const SizedBox(height: 40), // Espaço maior acima do texto "ou"
+            const SizedBox(height: 40),
             const Text('ou', textAlign: TextAlign.center),
-            const SizedBox(height: 40), // Espaço maior acima do botão Google
+            const SizedBox(height: 40),
             ElevatedButton.icon(
               onPressed: () {
                 // Lógica para login com Google
@@ -73,8 +110,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 textStyle: const TextStyle(fontSize: 16),
               ),
             ),
-            const SizedBox(
-                height: 40), // Espaço adicional abaixo do botão Google
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -90,7 +126,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       ),
       child: Stack(
         children: [
-          // Container deslizante
           AnimatedAlign(
             duration: const Duration(milliseconds: 300),
             alignment:
@@ -103,14 +138,15 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   } else {
                     _isEmailSelected = false;
                   }
+                  _validateForm();
                 });
               },
               child: Container(
-                width: MediaQuery.of(context).size.width * 0.45, // Reduzido
-                height: 40, // Reduzido
+                width: MediaQuery.of(context).size.width * 0.45,
+                height: 40,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20), // Mais arredondado
-                  color: Colors.white, // Branco
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white,
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -120,7 +156,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
             ),
           ),
-          // Container com textos fixos fora do deslizante
           Align(
             alignment:
                 _isEmailSelected ? Alignment.centerLeft : Alignment.centerRight,
@@ -129,7 +164,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               alignment: Alignment.center,
               child: Text(
                 _isEmailSelected ? 'Telefone' : 'Email',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
                 ),
@@ -144,8 +179,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
   Widget _buildEmailForm() {
     return Column(
       children: [
-        const TextField(
-          decoration: InputDecoration(
+        TextField(
+          controller: _emailController,
+          decoration: const InputDecoration(
             prefixIcon: Icon(Icons.email, color: Colors.grey),
             labelText: 'Email',
             border: OutlineInputBorder(
@@ -156,8 +192,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: 20),
-        const TextField(
-          decoration: InputDecoration(
+        TextField(
+          controller: _senhaController,
+          decoration: const InputDecoration(
             prefixIcon: Icon(Icons.lock, color: Colors.grey),
             labelText: 'Senha',
             border: OutlineInputBorder(
@@ -167,23 +204,27 @@ class _RegistroScreenState extends State<RegistroScreen> {
             suffixIcon: Icon(Icons.visibility, color: Colors.grey),
           ),
           obscureText: true,
+          keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ContinuarRegistroScreen(),
-              ),
-            );
-          },
+          onPressed: _isFormValid
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ContinuarRegistroScreen(),
+                    ),
+                  );
+                }
+              : null,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: const Size(double.infinity, 50),
-            backgroundColor: const Color(0xFF4A3497),
+            backgroundColor:
+                _isFormValid ? const Color(0xFF4A3497) : Colors.grey,
           ),
           child: const Text('Registrar-se'),
         ),
@@ -194,8 +235,9 @@ class _RegistroScreenState extends State<RegistroScreen> {
   Widget _buildTelefoneForm() {
     return Column(
       children: [
-        const TextField(
-          decoration: InputDecoration(
+        TextField(
+          controller: _telefoneController,
+          decoration: const InputDecoration(
             prefixIcon: Icon(Icons.phone, color: Colors.grey),
             labelText: 'Número de Telefone',
             border: OutlineInputBorder(
@@ -207,24 +249,35 @@ class _RegistroScreenState extends State<RegistroScreen> {
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const VerificarTelefoneScreen(),
-              ),
-            );
-          },
+          onPressed: _isFormValid
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const VerificarTelefoneScreen(),
+                    ),
+                  );
+                }
+              : null,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             minimumSize: const Size(double.infinity, 50),
-            backgroundColor: const Color(0xFF4A3497),
+            backgroundColor:
+                _isFormValid ? const Color(0xFF4A3497) : Colors.grey,
           ),
           child: const Text('Enviar código'),
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    _telefoneController.dispose();
+    super.dispose();
   }
 }

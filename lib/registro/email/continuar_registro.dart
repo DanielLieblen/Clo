@@ -1,4 +1,4 @@
-import 'package:clo/registro/verificar_email.dart';
+import 'package:clo/registro/email/confirmacao_email.dart';
 import 'package:flutter/material.dart';
 
 class ContinuarRegistroScreen extends StatefulWidget {
