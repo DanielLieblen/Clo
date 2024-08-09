@@ -22,7 +22,7 @@ class HomeScreen extends StatelessWidget {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Eletrodomésticos, Joias...',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
@@ -79,7 +79,7 @@ class HomeScreen extends StatelessWidget {
             child: PageView(
               scrollDirection: Axis.horizontal,
               children: [
-                buildCategoryCard('Tecnologia', 'assets/images/tecnologia.jpg'),
+                buildCategoryCard('Tecnologia', 'assets/images/tecnologia.png'),
                 buildCategoryCard('Jogos', 'assets/images/jogos.jpg'),
                 buildCategoryCard('Moda', 'assets/images/moda.jpg'),
                 buildCategoryCard('Casa', 'assets/images/casa.jpg'),

@@ -69,6 +69,14 @@ flutter:
   assets:
     - assets/logo.png
     - assets/logo2.png
+    - assets/images/tecnologia.png
+    - assets/images/rpg.jpg
+    - assets/images/vestiario.jpg
+    - assets/icons/Compass.png
+    - assets/icons/Bell.png
+    - assets/icons/equalizer.png
+    - assets/images/game.png
+    - assets/images/vaso_planta.jpg
     - assets/verification_image.png
     - assets/google_logo.png
     - assets/intro1.png

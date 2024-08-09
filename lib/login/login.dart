@@ -1,5 +1,6 @@
 // Certifique-se de que o caminho está correto
 import 'package:clo/registro/email/registro.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -84,7 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ElevatedButton.icon(
                 onPressed: () {
                   // Lógica para login com Google
-                  print("Login com Google");
+                  if (kDebugMode) {
+                    print("Login com Google");
+                  }
                 },
                 icon: Image.asset(
                   'assets/google_logo.png',
@@ -204,7 +207,9 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _isFormValid
               ? () {
                   // Lógica de login com email
-                  print("Login com email: ${_emailController.text}");
+                  if (kDebugMode) {
+                    print("Login com email: ${_emailController.text}");
+                  }
                 }
               : null,
           style: ElevatedButton.styleFrom(
@@ -241,7 +246,9 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _isFormValid
               ? () {
                   // Lógica de login com telefone
-                  print("Login com telefone: ${_telefoneController.text}");
+                  if (kDebugMode) {
+                    print("Login com telefone: ${_telefoneController.text}");
+                  }
                 }
               : null,
           style: ElevatedButton.styleFrom(
