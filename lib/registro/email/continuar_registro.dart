@@ -15,9 +15,9 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 0, // Hides the AppBar
-        backgroundColor: Colors.transparent, // Makes the AppBar transparent
-        elevation: 0, // Removes the shadow
+        toolbarHeight: 0, // Oculta a AppBar
+        backgroundColor: Colors.transparent, // Torna a AppBar transparente
+        elevation: 0, // Remove a sombra
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -75,14 +75,21 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ConfirmacaoEmailScreen(),
+                          builder: (context) =>
+                              const ConfirmacaoEmailScreen(), //passa para a pagina de confirmacao do email
                         ),
                       );
                     }
                   : null,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: _termsAccepted
+                    ? const Color(0xFF4A3497)
+                    : Colors.grey.shade300, // Cor do botão desativado
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(10), // Bordas pouco arredondadas
+                ),
               ),
               child: const Text('Finalizar registro'),
             ),

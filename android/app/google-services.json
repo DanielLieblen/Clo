@@ -1,0 +1,86 @@
+{
+  "project_info": {
+    "project_number": "87595956227",
+    "project_id": "cloo-9f4b4",
+    "storage_bucket": "cloo-9f4b4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87595956227:android:ed3eeac67563e8fda73636",
+        "android_client_info": {
+          "package_name": "com.clo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIsZ_jdzfzq5RWjNpXIpAmb7pqnW8Tblo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87595956227:android:bd2399cc3a2073eba73636",
+        "android_client_info": {
+          "package_name": "com.daniel.clo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIsZ_jdzfzq5RWjNpXIpAmb7pqnW8Tblo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87595956227:android:ae46fe67b5a56ff0a73636",
+        "android_client_info": {
+          "package_name": "com.example.clo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIsZ_jdzfzq5RWjNpXIpAmb7pqnW8Tblo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:87595956227:android:a5564a54d1b30ae7a73636",
+        "android_client_info": {
+          "package_name": "com.exemple.clo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIsZ_jdzfzq5RWjNpXIpAmb7pqnW8Tblo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

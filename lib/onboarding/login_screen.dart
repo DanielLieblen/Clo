@@ -1,5 +1,5 @@
-import 'package:clo/registro/cellphone/registro_telefone.dart';
 import 'package:clo/registro/email/continuar_registro.dart';
+import 'package:clo/registro/email/registro_email.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -47,7 +47,7 @@ class LoginScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              const RegistroTelefoneScreen()), // Navegação para tela de login
+                              const RegistroScreen()), // Navegação para tela de login
                     ); //lembrar que o telefone eh padrao portanto ela é a tela principal de registro
                   },
                   style: ElevatedButton.styleFrom(

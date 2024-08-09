@@ -11,31 +11,25 @@ class RegistroTelefoneScreen extends StatefulWidget {
 class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
   bool _isEmailSelected = false;
 
-  void _toggleSelection() {
-    setState(() {
-      _isEmailSelected = !_isEmailSelected;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A3497)),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
         title: const Text(
           'Área de Registro',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +47,13 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_isEmailSelected) _toggleSelection();
+                      if (_isEmailSelected) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const RegistroScreen()),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       shape: const RoundedRectangleBorder(
@@ -63,7 +63,7 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
                         ),
                       ),
                       backgroundColor: !_isEmailSelected
-                          ? Colors.deepPurple
+                          ? const Color(0xFF4A3497)
                           : Colors.grey.shade300,
                     ),
                     child: Text(
@@ -78,12 +78,9 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (!_isEmailSelected) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const RegistroEmailScreen()),
-                        );
+                        setState(() {
+                          _isEmailSelected = true;
+                        });
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -94,7 +91,7 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
                         ),
                       ),
                       backgroundColor: _isEmailSelected
-                          ? Colors.deepPurple
+                          ? const Color(0xFF4A3497)
                           : Colors.grey.shade300,
                     ),
                     child: Text(
@@ -110,20 +107,26 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
             const SizedBox(height: 20),
             const TextField(
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.phone),
+                prefixIcon: Icon(Icons.phone, color: Colors.grey),
                 labelText: 'Número de Telefone',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
               ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Lógica para enviar código de verificação
+                // Navegar para a próxima tela
               },
               style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: const Color(0xFF4A3497),
               ),
               child: const Text('Enviar código'),
             ),
@@ -137,15 +140,20 @@ class _RegistroTelefoneScreenState extends State<RegistroTelefoneScreen> {
               icon: Image.asset(
                 'assets/google_logo.png',
                 height: 24.0,
+                width: 24.0,
               ),
               label: const Text('Entrar com Google'),
               style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: Colors.white,
                 side: BorderSide(color: Colors.grey.shade300),
                 elevation: 2,
                 shadowColor: Colors.grey.shade100,
                 foregroundColor: Colors.black,
+                textStyle: const TextStyle(fontSize: 16),
               ),
             ),
           ],

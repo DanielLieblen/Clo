@@ -1,11 +1,18 @@
+import 'package:clo/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'onboarding/tela_abertura.dart';
+
+import 'onboarding/login_screen.dart';
 import 'onboarding/onboarding_screen1.dart';
 import 'onboarding/onboarding_screen2.dart';
 import 'onboarding/onboarding_screen3.dart';
-import 'onboarding/login_screen.dart';
+import 'onboarding/tela_abertura.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -43,9 +50,7 @@ class MyApp extends StatelessWidget {
           '/onboarding2': (context) => const OnboardingScreen2(),
           '/onboarding3': (context) => const OnboardingScreen3(),
           '/login': (context) => const LoginScreen(),
-
-        }
-    );
+        });
   }
 }
 

@@ -1,27 +1,22 @@
 import 'package:clo/registro/email/continuar_registro.dart';
+import 'package:clo/registro/telefone/verificar_telefone.dart';
 import 'package:flutter/material.dart';
 
-class RegistroEmailScreen extends StatefulWidget {
-  const RegistroEmailScreen({super.key});
+class RegistroScreen extends StatefulWidget {
+  const RegistroScreen({super.key});
 
   @override
-  _RegistroEmailScreenState createState() => _RegistroEmailScreenState();
+  _RegistroScreenState createState() => _RegistroScreenState();
 }
 
-class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
+class _RegistroScreenState extends State<RegistroScreen> {
   bool _isEmailSelected = true;
-
-  void _toggleSelection() {
-    setState(() {
-      _isEmailSelected = !_isEmailSelected;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.grey.shade300,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -31,11 +26,11 @@ class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
         ),
         title: const Text(
           'Área de Registro',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +48,11 @@ class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (!_isEmailSelected) _toggleSelection();
+                      if (!_isEmailSelected) {
+                        setState(() {
+                          _isEmailSelected = true;
+                        });
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       shape: const RoundedRectangleBorder(
@@ -63,31 +62,7 @@ class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
                         ),
                       ),
                       backgroundColor: _isEmailSelected
-                          ? Colors.deepPurple
-                          : Colors.grey.shade300,
-                    ),
-                    child: Text(
-                      'Email',
-                      style: TextStyle(
-                        color: _isEmailSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_isEmailSelected) _toggleSelection();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                        ),
-                      ),
-                      backgroundColor: !_isEmailSelected
-                          ? Colors.deepPurple
+                          ? const Color(0xFF4A3497)
                           : Colors.grey.shade300,
                     ),
                     child: Text(
@@ -98,52 +73,38 @@ class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
                     ),
                   ),
                 ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_isEmailSelected) {
+                        setState(() {
+                          _isEmailSelected = false;
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
+                        ),
+                      ),
+                      backgroundColor: !_isEmailSelected
+                          ? const Color(0xFF4A3497)
+                          : Colors.grey.shade300,
+                    ),
+                    child: Text(
+                      'Email',
+                      style: TextStyle(
+                        color: _isEmailSelected ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            if (_isEmailSelected)
-              const TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.email),
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              )
-            else
-              const TextField(
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.phone),
-                  labelText: 'Telefone',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-            const SizedBox(height: 20),
-            const TextField(
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.lock),
-                labelText: 'Senha',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.visibility),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ContinuarRegistroScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.deepPurple,
-              ),
-              child: const Text('Registrar-se'),
-            ),
+            _isEmailSelected ? _buildTelefoneForm() : _buildEmailForm(),
             const SizedBox(height: 20),
             const Text('ou', textAlign: TextAlign.center),
             const SizedBox(height: 20),
@@ -154,20 +115,112 @@ class _RegistroEmailScreenState extends State<RegistroEmailScreen> {
               icon: Image.asset(
                 'assets/google_logo.png',
                 height: 24.0,
+                width: 24.0,
               ),
               label: const Text('Entrar com Google'),
               style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10), //bordas arredondadas
+                ),
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: Colors.white,
                 side: BorderSide(color: Colors.grey.shade300),
                 elevation: 2,
                 shadowColor: Colors.grey.shade100,
                 foregroundColor: Colors.black,
+                textStyle: const TextStyle(fontSize: 16),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEmailForm() {
+    return Column(
+      children: [
+        const TextField(
+          decoration: InputDecoration(
+            prefixIcon: Icon(Icons.email, color: Colors.grey),
+            labelText: 'Email',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 20),
+        const TextField(
+          decoration: InputDecoration(
+            prefixIcon: Icon(Icons.lock, color: Colors.grey),
+            labelText: 'Senha',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            suffixIcon: Icon(Icons.visibility, color: Colors.grey),
+          ),
+          obscureText: true,
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ContinuarRegistroScreen(),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            minimumSize: const Size(double.infinity, 50),
+            backgroundColor: const Color(0xFF4A3497),
+          ),
+          child: const Text('Registrar-se'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTelefoneForm() {
+    return Column(
+      children: [
+        const TextField(
+          decoration: InputDecoration(
+            prefixIcon: Icon(Icons.phone, color: Colors.grey),
+            labelText: 'Número de Telefone',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VerificarTelefoneScreen(),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            minimumSize: const Size(double.infinity, 50),
+            backgroundColor: const Color(0xFF4A3497),
+          ),
+          child: const Text('Enviar código'),
+        ),
+      ],
     );
   }
 }
