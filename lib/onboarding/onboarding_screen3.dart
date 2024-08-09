@@ -1,5 +1,5 @@
+import 'package:clo/onboarding/bem_vindo.dart';
 import 'package:flutter/material.dart';
-import 'package:clo/onboarding/login_screen.dart';
 
 void main() {
   runApp(const OnboardingApp3());
@@ -80,20 +80,25 @@ class OnboardingScreen3 extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 200), // Aumenta o espaço entre o texto e o botão para 100px
+                  const SizedBox(
+                      height:
+                          200), // Aumenta o espaço entre o texto e o botão para 100px
                   Expanded(
                     child: Align(
-                      alignment: Alignment.topCenter, // Alinha o botão no topo do espaço restante
+                      alignment: Alignment
+                          .topCenter, // Alinha o botão no topo do espaço restante
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 10.0), // Margem de 10px em cada lado
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10.0), // Margem de 10px em cada lado
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width - 20, // Largura do botão (largura da tela - 20px)
+                          width: MediaQuery.of(context).size.width -
+                              20, // Largura do botão (largura da tela - 20px)
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
+                                  builder: (context) => const BemVindoScreen(),
                                 ),
                               );
                             },
@@ -106,7 +111,8 @@ class OnboardingScreen3 extends StatelessWidget {
                             ),
                             child: const Text(
                               'Próximo',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 18),
                             ),
                           ),
                         ),

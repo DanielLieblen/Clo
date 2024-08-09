@@ -1,10 +1,9 @@
-import 'package:clo/registro/email/continuar_registro.dart';
-import 'package:clo/registro/email/registro_email.dart';
+import 'package:clo/registro/email/registro.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class BemVindoScreen extends StatelessWidget {
+  const BemVindoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +77,7 @@ class LoginScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              const ContinuarRegistroScreen()), // Navegação para tela de login
+                              const BemVindoScreen()), // Navegação para tela de login
                     );
                     // Adicione a navegação para a tela de login aqui
                   },

@@ -1,4 +1,4 @@
-import 'package:clo/registro/email/registro_email.dart';
+import 'package:clo/registro/email/registro.dart';
 import 'package:flutter/material.dart';
 
 class RegistroTelefoneScreen extends StatefulWidget {

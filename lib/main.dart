@@ -2,7 +2,7 @@ import 'package:clo/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'onboarding/login_screen.dart';
+import 'onboarding/bem_vindo.dart';
 import 'onboarding/onboarding_screen1.dart';
 import 'onboarding/onboarding_screen2.dart';
 import 'onboarding/onboarding_screen3.dart';
@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
           '/onboarding1': (context) => const OnboardingScreen1(),
           '/onboarding2': (context) => const OnboardingScreen2(),
           '/onboarding3': (context) => const OnboardingScreen3(),
-          '/login': (context) => const LoginScreen(),
+          '/login': (context) => const BemVindoScreen(),
         });
   }
 }

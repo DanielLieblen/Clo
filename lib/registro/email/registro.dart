@@ -16,10 +16,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.grey.shade300,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -36,78 +36,20 @@ class _RegistroScreenState extends State<RegistroScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 60), // Aumentando o espaço acima
             const Text(
               'Oi, seja bem vindo',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (!_isEmailSelected) {
-                        setState(() {
-                          _isEmailSelected = true;
-                        });
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          bottomLeft: Radius.circular(10),
-                        ),
-                      ),
-                      backgroundColor: _isEmailSelected
-                          ? const Color(0xFF4A3497)
-                          : Colors.grey.shade300,
-                    ),
-                    child: Text(
-                      'Telefone',
-                      style: TextStyle(
-                        color: !_isEmailSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_isEmailSelected) {
-                        setState(() {
-                          _isEmailSelected = false;
-                        });
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
-                        ),
-                      ),
-                      backgroundColor: !_isEmailSelected
-                          ? const Color(0xFF4A3497)
-                          : Colors.grey.shade300,
-                    ),
-                    child: Text(
-                      'Email',
-                      style: TextStyle(
-                        color: _isEmailSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _isEmailSelected ? _buildTelefoneForm() : _buildEmailForm(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40), // Espaço maior abaixo do título
+            _buildSwipeButton(),
+            const SizedBox(
+                height: 40), // Espaço maior entre o swipe e o formulário
+            _isEmailSelected ? _buildEmailForm() : _buildTelefoneForm(),
+            const SizedBox(height: 40), // Espaço maior acima do texto "ou"
             const Text('ou', textAlign: TextAlign.center),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40), // Espaço maior acima do botão Google
             ElevatedButton.icon(
               onPressed: () {
                 // Lógica para login com Google
@@ -120,7 +62,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               label: const Text('Entrar com Google'),
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), //bordas arredondadas
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: Colors.white,
@@ -131,8 +73,70 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 textStyle: const TextStyle(fontSize: 16),
               ),
             ),
+            const SizedBox(
+                height: 40), // Espaço adicional abaixo do botão Google
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSwipeButton() {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        color: Colors.grey.shade300,
+      ),
+      child: Stack(
+        children: [
+          // Container deslizante
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            alignment:
+                _isEmailSelected ? Alignment.centerRight : Alignment.centerLeft,
+            child: GestureDetector(
+              onHorizontalDragEnd: (details) {
+                setState(() {
+                  if (details.velocity.pixelsPerSecond.dx > 0) {
+                    _isEmailSelected = true;
+                  } else {
+                    _isEmailSelected = false;
+                  }
+                });
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.45, // Reduzido
+                height: 40, // Reduzido
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20), // Mais arredondado
+                  color: Colors.white, // Branco
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _isEmailSelected ? 'Email' : 'Telefone',
+                  style: const TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
+            ),
+          ),
+          // Container com textos fixos fora do deslizante
+          Align(
+            alignment:
+                _isEmailSelected ? Alignment.centerLeft : Alignment.centerRight,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.5,
+              alignment: Alignment.center,
+              child: Text(
+                _isEmailSelected ? 'Telefone' : 'Email',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
