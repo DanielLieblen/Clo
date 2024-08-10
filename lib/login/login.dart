@@ -1,4 +1,5 @@
 // Certifique-se de que o caminho está correto
+import 'package:clo/home/tela_home.dart';
 import 'package:clo/registro/email/registro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -207,8 +208,20 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _isFormValid
               ? () {
                   // Lógica de login com email
-                  if (kDebugMode) {
-                    print("Login com email: ${_emailController.text}");
+                  if (_emailController.text == 'user@example.com' &&
+                      _senhaController.text == 'password') {
+                    // Navegação para a HomeScreen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  } else {
+                    // Mostra mensagem de erro
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Credenciais inválidas')),
+                    );
                   }
                 }
               : null,
@@ -246,8 +259,20 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _isFormValid
               ? () {
                   // Lógica de login com telefone
-                  if (kDebugMode) {
-                    print("Login com telefone: ${_telefoneController.text}");
+                  if (_telefoneController.text == '123456789') {
+                    // Navegação para a HomeScreen
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  } else {
+                    // Mostra mensagem de erro
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Número de telefone inválido')),
+                    );
                   }
                 }
               : null,

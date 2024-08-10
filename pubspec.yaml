@@ -36,7 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   animated_widgets: ^1.1.0
-  font_awesome_flutter: ^10.1.0
+  font_awesome_flutter: ^10.4.0
   flutter_swiper_plus: ^2.0.0
   firebase_core: ^2.32.0
   firebase_auth: ^4.6.0
@@ -82,6 +82,17 @@ flutter:
     - assets/intro1.png
     - assets/intro2.png
     - assets/intro3.png
+    - assets/icons/home.png
+    - assets/icons/Compass.png
+    - assets/icons/categories_icon.png
+    - assets/images/notifications_icon.png
+    - assets/images/cadeira.jpg
+    - assets/images/headset.jpg
+    - assets/images/pc_gamer.jpg
+    - assets/images/teclado.jpg
+    - assets/images/monitor.jpg
+    - assets/images/mouse.jpg
+    - assets/images/gepu_veia.jpg
 
 
 

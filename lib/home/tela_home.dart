@@ -1,7 +1,17 @@
+import 'package:clo/home/leilao.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _navigateToCreateAuction(BuildContext context) {
+    // Navega para a página de criar leilão
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateAuctionScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +24,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          // Conteúdo da tela principal
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -36,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.tune),
+                    icon: const Icon(Icons.tune),
                     color: Colors.white,
                     onPressed: () {
                       // Ação para o botão de preferências de pesquisa
@@ -80,27 +91,139 @@ class HomeScreen extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               children: [
                 buildCategoryCard('Tecnologia', 'assets/images/tecnologia.png'),
-                buildCategoryCard('Jogos', 'assets/images/jogos.jpg'),
-                buildCategoryCard('Moda', 'assets/images/moda.jpg'),
-                buildCategoryCard('Casa', 'assets/images/casa.jpg'),
+                buildCategoryCard('Jogos', 'assets/images/game.png'),
+                buildCategoryCard('Moda', 'assets/images/vestiario.jpg'),
+                buildCategoryCard('Casa', 'assets/images/vaso_planta.jpg'),
+                buildCategoryCard('RPG e Tabuleiro', 'assets/images/rpg.jpg'),
                 // Adicione mais cards conforme necessário
               ],
             ),
           ),
-          // Outros widgets ou carrosséis
+          // Carrossel "Em Alta"
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'EM ALTA',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Ação para o botão "Ver todos"
+                  },
+                  child: const Text(
+                    'Ver todos',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 250, // Altura dos cards
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                buildProductCard(
+                  'Mouse Gamer',
+                  'Lance Inicial',
+                  'R\$ 110,00',
+                  'assets/images/mouse.jpg',
+                ),
+                buildProductCard(
+                  'Teclado Mecânico',
+                  'Lance Inicial',
+                  'R\$ 250,00',
+                  'assets/images/teclado.jpg',
+                ),
+                buildProductCard(
+                  'Headset Gamer',
+                  'Lance Inicial',
+                  'R\$ 200,00',
+                  'assets/images/headset.jpg',
+                ),
+                buildProductCard(
+                  'Cadeira Gamer',
+                  'Lance Inicial',
+                  'R\$ 800,00',
+                  'assets/images/cadeira.jpg',
+                ),
+                buildProductCard(
+                  'Monitor 144Hz',
+                  'Lance Inicial',
+                  'R\$ 1000,00',
+                  'assets/images/monitor.jpg',
+                ),
+                buildProductCard(
+                  'PC Gamer',
+                  'Lance Inicial',
+                  'R\$ 3500,00',
+                  'assets/images/pc_gamer.jpg',
+                ),
+                // Adicione mais cards conforme necessário
+              ],
+            ),
+          ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.trending_up), label: 'Em Alta'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.category), label: 'Categorias'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.notifications), label: 'Notificações'),
-        ],
-        selectedItemColor: Color(0xFF4A3497), // Cor personalizada do projeto
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateToCreateAuction(context),
+        backgroundColor:
+            const Color(0xFF4A3497), // Cor personalizada do projeto
+        child: const FaIcon(FontAwesomeIcons.plus), // Ícone do FontAwesome
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: FaIcon(
+                FontAwesomeIcons.home,
+                size: 20, // Tamanho reduzido
+              ),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: FaIcon(
+                FontAwesomeIcons.compass,
+                size: 20, // Tamanho reduzido
+              ),
+              label: 'Explorar',
+            ),
+            BottomNavigationBarItem(
+              icon: FaIcon(
+                FontAwesomeIcons.bell,
+                size: 20, // Tamanho reduzido
+              ),
+              label: 'Notificações',
+            ),
+            BottomNavigationBarItem(
+              icon: FaIcon(
+                FontAwesomeIcons.user,
+                size: 20, // Tamanho reduzido
+              ),
+              label: 'Perfil',
+            ),
+          ],
+          selectedFontSize: 12, // Tamanho do texto selecionado reduzido
+          unselectedFontSize: 10, // Tamanho do texto não selecionado reduzido
+          selectedItemColor:
+              const Color(0xFF4A3497), // Cor personalizada do projeto
+          unselectedItemColor: Colors.grey, // Cor dos ícones não selecionados
+        ),
       ),
     );
   }
@@ -133,6 +256,65 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildProductCard(
+      String title, String subtitle, String price, String imagePath) {
+    return Container(
+      width: 150, // Largura dos cards
+      margin: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    price,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4A3497), // Cor personalizada do projeto
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
