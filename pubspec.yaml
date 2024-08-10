@@ -41,6 +41,8 @@ dependencies:
   firebase_core: ^2.32.0
   firebase_auth: ^4.6.0
   google_sign_in: any
+  dotted_border: ^2.0.0
+  image_picker: ^0.8.7+3 # ou a versão mais recente
 
 
 dev_dependencies:
@@ -53,7 +55,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -85,14 +86,18 @@ flutter:
     - assets/icons/home.png
     - assets/icons/Compass.png
     - assets/icons/categories_icon.png
-    - assets/images/notifications_icon.png
-    - assets/images/cadeira.jpg
-    - assets/images/headset.jpg
-    - assets/images/pc_gamer.jpg
+    - assets/icons/notifications_icon.png
+    - assets/images/mouse.jpg
     - assets/images/teclado.jpg
     - assets/images/monitor.jpg
-    - assets/images/mouse.jpg
-    - assets/images/gepu_veia.jpg
+    - assets/images/headset.jpg
+    - assets/images/cadeira.jpg
+    - assets/images/gpu.jpg
+    - assets/images/pc_gamer.jpg
+    - assets/images/rpg.jpg
+    - assets/images/vaso_planta.jpg
+    - assets/images/game.png
+
 
 
 

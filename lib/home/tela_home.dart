@@ -1,4 +1,5 @@
-import 'package:clo/home/leilao.dart';
+import 'package:clo/leilao/leilao.dart';
+import 'package:clo/profile/editar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -13,8 +14,20 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _navigateToEditProfile(BuildContext context) {
+    // Navega para a página de editar perfil
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth =
+        screenWidth * 0.4; // Define 40% da largura da tela para cada card
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tela Principal',
@@ -23,36 +36,79 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: Colors.black,
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16.0),
         children: [
-          // Conteúdo da tela principal
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+            padding: const EdgeInsets.symmetric(vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Eletrodomésticos, Joias...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _navigateToEditProfile(context),
+                      child: const CircleAvatar(
+                        radius: 30,
+                        backgroundImage: AssetImage(
+                            'assets/images/profile.jpg'), // Substitua pelo caminho correto da imagem de perfil
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () => _navigateToEditProfile(context),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Oi, Alan',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Vamos começar os lances!',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF4A3497), // Cor personalizada do projeto
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.tune),
-                    color: Colors.white,
-                    onPressed: () {
-                      // Ação para o botão de preferências de pesquisa
-                    },
-                  ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Eletrodomésticos, Joias...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4A3497),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.tune),
+                        color: Colors.white,
+                        onPressed: () {
+                          // Ação para o botão de preferências de pesquisa
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -86,7 +142,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 150, // Altura do carrossel
+            height: 150,
             child: PageView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -95,11 +151,9 @@ class HomeScreen extends StatelessWidget {
                 buildCategoryCard('Moda', 'assets/images/vestiario.jpg'),
                 buildCategoryCard('Casa', 'assets/images/vaso_planta.jpg'),
                 buildCategoryCard('RPG e Tabuleiro', 'assets/images/rpg.jpg'),
-                // Adicione mais cards conforme necessário
               ],
             ),
           ),
-          // Carrossel "Em Alta"
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
@@ -130,7 +184,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 250, // Altura dos cards
+            height: 250,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -139,38 +193,43 @@ class HomeScreen extends StatelessWidget {
                   'Lance Inicial',
                   'R\$ 110,00',
                   'assets/images/mouse.jpg',
+                  cardWidth,
                 ),
                 buildProductCard(
                   'Teclado Mecânico',
                   'Lance Inicial',
                   'R\$ 250,00',
                   'assets/images/teclado.jpg',
+                  cardWidth,
                 ),
                 buildProductCard(
                   'Headset Gamer',
                   'Lance Inicial',
                   'R\$ 200,00',
                   'assets/images/headset.jpg',
+                  cardWidth,
                 ),
                 buildProductCard(
                   'Cadeira Gamer',
                   'Lance Inicial',
                   'R\$ 800,00',
                   'assets/images/cadeira.jpg',
+                  cardWidth,
                 ),
                 buildProductCard(
                   'Monitor 144Hz',
                   'Lance Inicial',
                   'R\$ 1000,00',
                   'assets/images/monitor.jpg',
+                  cardWidth,
                 ),
                 buildProductCard(
                   'PC Gamer',
                   'Lance Inicial',
                   'R\$ 3500,00',
                   'assets/images/pc_gamer.jpg',
+                  cardWidth,
                 ),
-                // Adicione mais cards conforme necessário
               ],
             ),
           ),
@@ -178,9 +237,9 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToCreateAuction(context),
-        backgroundColor:
-            const Color(0xFF4A3497), // Cor personalizada do projeto
-        child: const FaIcon(FontAwesomeIcons.plus), // Ícone do FontAwesome
+        backgroundColor: const Color(0xFF4A3497),
+        shape: const CircleBorder(),
+        child: const FaIcon(FontAwesomeIcons.plus),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
@@ -191,38 +250,37 @@ class HomeScreen extends StatelessWidget {
           items: const [
             BottomNavigationBarItem(
               icon: FaIcon(
-                FontAwesomeIcons.home,
-                size: 20, // Tamanho reduzido
+                FontAwesomeIcons.house,
+                size: 20,
               ),
               label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: FaIcon(
                 FontAwesomeIcons.compass,
-                size: 20, // Tamanho reduzido
+                size: 20,
               ),
               label: 'Explorar',
             ),
             BottomNavigationBarItem(
               icon: FaIcon(
                 FontAwesomeIcons.bell,
-                size: 20, // Tamanho reduzido
+                size: 20,
               ),
               label: 'Notificações',
             ),
             BottomNavigationBarItem(
               icon: FaIcon(
                 FontAwesomeIcons.user,
-                size: 20, // Tamanho reduzido
+                size: 20,
               ),
               label: 'Perfil',
             ),
           ],
-          selectedFontSize: 12, // Tamanho do texto selecionado reduzido
-          unselectedFontSize: 10, // Tamanho do texto não selecionado reduzido
-          selectedItemColor:
-              const Color(0xFF4A3497), // Cor personalizada do projeto
-          unselectedItemColor: Colors.grey, // Cor dos ícones não selecionados
+          selectedFontSize: 12,
+          unselectedFontSize: 10,
+          selectedItemColor: const Color(0xFF4A3497),
+          unselectedItemColor: Colors.grey,
         ),
       ),
     );
@@ -260,10 +318,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget buildProductCard(
-      String title, String subtitle, String price, String imagePath) {
+  Widget buildProductCard(String title, String subtitle, String price,
+      String imagePath, double width) {
     return Container(
-      width: 150, // Largura dos cards
+      width: width,
       margin: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Card(
         shape: RoundedRectangleBorder(
@@ -307,7 +365,7 @@ class HomeScreen extends StatelessWidget {
                       fontFamily: 'Poppins',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4A3497), // Cor personalizada do projeto
+                      color: Color(0xFF4A3497),
                     ),
                   ),
                 ],

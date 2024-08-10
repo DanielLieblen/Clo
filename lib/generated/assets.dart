@@ -2,44 +2,40 @@
 class Assets {
   Assets._();
 
-  static const String assetsBell = 'assets/Bell.png';
-  static const String assetsCompass = 'assets/Compass.png';
-  static const String assetsFLABBLKIPROYGrande =
-      'assets/FLABBLKIPROY_grande.webp';
-  static const String assetsGame = 'assets/game.png';
   static const String assetsGoogleLogo = 'assets/google_logo.png';
-  static const String assetsHeroiconsSolidHome =
-      'assets/heroicons-solid_home.png';
-  static const String assetsHome = 'assets/home.png';
-  static const String assetsHome1 = 'assets/home1.png';
+  static const String assetsIconsBell = 'assets/icons/Bell.png';
+  static const String assetsIconsCategoriesIcon =
+      'assets/icons/categories_icon.png';
+  static const String assetsIconsCompass = 'assets/icons/Compass.png';
+  static const String assetsIconsEqualizer = 'assets/icons/equalizer.png';
+  static const String assetsIconsHome = 'assets/icons/home.png';
+  static const String assetsImagesCadeira = 'assets/images/cadeira.jpg';
+  static const String assetsImagesGame = 'assets/images/game.png';
+  static const String assetsImagesGepuVeia = 'assets/images/gepu_veia.jpg';
+  static const String assetsImagesHeadset = 'assets/images/headset.jpg';
+  static const String assetsImagesMonitor = 'assets/images/monitor.jpg';
+  static const String assetsImagesMouse = 'assets/images/mouse.jpg';
+  static const String assetsImagesPcGamer = 'assets/images/pc_gamer.jpg';
+  static const String assetsImagesRpg = 'assets/images/rpg.jpg';
+  static const String assetsImagesTeclado = 'assets/images/teclado.jpg';
+  static const String assetsImagesTecnologia = 'assets/images/tecnologia.png';
+  static const String assetsImagesVasoPlanta = 'assets/images/vaso_planta.jpg';
+  static const String assetsImagesVestiario = 'assets/images/vestiario.jpg';
   static const String assetsIntro1 = 'assets/intro1.png';
   static const String assetsIntro2 = 'assets/intro2.png';
   static const String assetsIntro3 = 'assets/intro3.png';
   static const String assetsLogo = 'assets/logo.png';
   static const String assetsLogo2 = 'assets/logo2.png';
   static const String assetsLogoGoogle = 'assets/logo_google.png';
-  static const String
-      assetsMoesIDon39TAlwasyPlayVideoGamesGamingHumorFunnyGamerClassicTShirt2FrontDaisy480px =
-      'assets/moes-i-don39-t-alwasy-play-video-games-gaming-humor-funny-gamer-classic-t-shirt-2-front-daisy-480px.png';
-  static const String assetsProfile = 'assets/profile.png';
-  static const String assetsRpg = 'assets/rpg.jpg';
-  static const String assetsTecnologia = 'assets/tecnologia.png';
   static const String assetsVerificationImage = 'assets/verification_image.png';
-  static const String assetsVestiario = 'assets/vestiario.jpg';
-  static const String cloAssetsBell = 'assets/Bell.png';
-  static const String cloAssetsCompass = 'assets/Compass.png';
-  static const String cloAssetsGame = 'assets/game.png';
   static const String cloAssetsGoogleLogo = 'assets/google_logo.png';
   static const String cloAssetsIntro1 = 'assets/intro1.png';
   static const String cloAssetsIntro2 = 'assets/intro2.png';
   static const String cloAssetsIntro3 = 'assets/intro3.png';
   static const String cloAssetsLogo = 'assets/logo.png';
   static const String cloAssetsLogo2 = 'assets/logo2.png';
-  static const String cloAssetsRpg = 'assets/rpg.jpg';
-  static const String cloAssetsTecnologia = 'assets/tecnologia.png';
   static const String cloAssetsVerificationImage =
       'assets/verification_image.png';
-  static const String cloAssetsVestiario = 'assets/vestiario.jpg';
   static const String fontsMerriweatherBlack =
       'assets/fonts/Merriweather-Black.ttf';
   static const String fontsMerriweatherBlackItalic =
@@ -86,4 +82,28 @@ class Assets {
   static const String fontsPoppinsThin = 'assets/fonts/Poppins-Thin.ttf';
   static const String fontsPoppinsThinItalic =
       'assets/fonts/Poppins-ThinItalic.ttf';
+  static const String iconsBell = 'assets/icons/Bell.png';
+  static const String iconsCategoriesIcon = 'assets/icons/categories_icon.png';
+  static const String iconsCompass = 'assets/icons/Compass.png';
+  static const String iconsEqualizer = 'assets/icons/equalizer.png';
+  static const String iconsHeroiconsSolidHome =
+      'assets/icons/heroicons-solid_home.png';
+  static const String iconsHome = 'assets/icons/home.png';
+  static const String iconsHome1 = 'assets/icons/home1.png';
+  static const String iconsProfile = 'assets/icons/profile.png';
+  static const String imagesCadeira = 'assets/images/cadeira.jpg';
+  static const String imagesGame = 'assets/images/game.png';
+  static const String imagesGepuVeia = 'assets/images/gepu_veia.jpg';
+  static const String imagesGpu = 'assets/images/gpu.jpg';
+  static const String imagesHeadset = 'assets/images/headset.jpg';
+  static const String imagesJarroMario = 'assets/images/jarro-mario.jpg';
+  static const String imagesMonitor = 'assets/images/monitor.jpg';
+  static const String imagesMouse = 'assets/images/mouse.jpg';
+  static const String imagesPcGamer = 'assets/images/pc_gamer.jpg';
+  static const String imagesRpg = 'assets/images/rpg.jpg';
+  static const String imagesTeclado = 'assets/images/teclado.jpg';
+  static const String imagesTecnologia = 'assets/images/tecnologia.png';
+  static const String imagesVasoPlanta = 'assets/images/vaso_planta.jpg';
+  static const String imagesVestiario = 'assets/images/vestiario.jpg';
+  static const String imagesVestiario2 = 'assets/images/vestiario2.png';
 }
