@@ -38,8 +38,8 @@ dependencies:
   animated_widgets: ^1.1.0
   font_awesome_flutter: ^10.4.0
   flutter_swiper_plus: ^2.0.0
-  firebase_core: ^2.32.0
-  firebase_auth: ^4.6.0
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
   google_sign_in: any
   dotted_border: ^2.0.0
   image_picker: ^0.8.7+3 # ou a versão mais recente
