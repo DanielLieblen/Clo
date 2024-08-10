@@ -1,5 +1,6 @@
-import 'package:clo/registro/email/continuar_registro.dart';
-import 'package:clo/registro/telefone/verificar_telefone.dart';
+import 'package:clo/home/tela_home.dart'; // Certifique-se de que o caminho está correto
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class RegistroScreen extends StatefulWidget {
@@ -11,10 +12,22 @@ class RegistroScreen extends StatefulWidget {
 
 class _RegistroScreenState extends State<RegistroScreen> {
   bool _isEmailSelected = true;
+  bool _showAdditionalFields = false;
+  bool _isFormValid = false;
+  bool _termsAccepted = false;
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
-  final TextEditingController _telefoneController = TextEditingController();
-  bool _isFormValid = false;
+  final TextEditingController _telefoneController =
+      TextEditingController(text: '+55'); // Pré-preenche com +55
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _sobrenomeController = TextEditingController();
+  final TextEditingController _smsCodeController = TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String? _verificationId;
 
   @override
   void initState() {
@@ -22,6 +35,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
     _emailController.addListener(_validateForm);
     _senhaController.addListener(_validateForm);
     _telefoneController.addListener(_validateForm);
+    _nomeController.addListener(_validateForm);
+    _sobrenomeController.addListener(_validateForm);
   }
 
   void _validateForm() {
@@ -32,22 +47,166 @@ class _RegistroScreenState extends State<RegistroScreen> {
       } else {
         _isFormValid = _isValidTelefone(_telefoneController.text);
       }
+
+      if (_showAdditionalFields) {
+        _isFormValid = _isFormValid &&
+            _nomeController.text.isNotEmpty &&
+            _sobrenomeController.text.isNotEmpty &&
+            _termsAccepted;
+      }
     });
   }
 
   bool _isValidEmail(String email) {
-    // Verifica se o email contém apenas letras
-    return RegExp(r'^[a-zA-Z]+$').hasMatch(email);
+    return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
   }
 
   bool _isValidSenha(String senha) {
-    // Verifica se a senha contém apenas números
-    return RegExp(r'^\d+$').hasMatch(senha);
+    return senha.length >= 6;
   }
 
   bool _isValidTelefone(String telefone) {
-    // Verifica se o telefone contém apenas números
-    return RegExp(r'^\d+$').hasMatch(telefone);
+    // Verifica se o telefone começa com + e contém apenas dígitos depois
+    return RegExp(r'^\+\d{10,15}$').hasMatch(telefone);
+  }
+
+  Future<void> _registrarComEmail() async {
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _senhaController.text.trim(),
+      );
+      // Sucesso no registro, exibir campos adicionais
+      setState(() {
+        _showAdditionalFields = true;
+      });
+    } on FirebaseAuthException catch (e) {
+      // Tratar erro
+      String message;
+      if (e.code == 'weak-password') {
+        message = 'A senha fornecida é muito fraca.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'Uma conta já existe para este email.';
+      } else {
+        message = 'Ocorreu um erro. Tente novamente.';
+      }
+      _mostrarErro(message);
+    }
+  }
+
+  Future<void> _registrarComTelefone() async {
+    final String telefoneFormatado = _telefoneController.text.trim();
+
+    if (!_isValidTelefone(telefoneFormatado)) {
+      _mostrarErro(
+          'Por favor, insira o número de telefone no formato correto E.164, como +5511998765432.');
+      return;
+    }
+
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: telefoneFormatado,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-resolve for some devices
+          await _auth.signInWithCredential(credential);
+          setState(() {
+            _showAdditionalFields = true;
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          _mostrarErro('Falha ao verificar o número: ${e.message}');
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _verificationId = verificationId;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Código de verificação enviado.'),
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          setState(() {
+            _verificationId = verificationId;
+          });
+        },
+      );
+    } catch (e) {
+      _mostrarErro('Erro: $e');
+    }
+  }
+
+  Future<void> _verificarCodigoSMS() async {
+    try {
+      final code = _smsCodeController.text.trim();
+      if (_verificationId != null && code.isNotEmpty) {
+        final credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId!,
+          smsCode: code,
+        );
+        await _auth.signInWithCredential(credential);
+        setState(() {
+          _showAdditionalFields = true;
+        });
+
+        // Redireciona para a tela home após a verificação
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        _mostrarErro('Código de verificação inválido.');
+      }
+    } catch (e) {
+      _mostrarErro('Erro ao verificar código: $e');
+    }
+  }
+
+  Future<void> _salvarInformacoesAdicionais() async {
+    try {
+      User? user = _auth.currentUser;
+
+      if (user != null) {
+        // Se a conta não existir, continue com o registro
+        await user.updateDisplayName(
+            "${_nomeController.text} ${_sobrenomeController.text}");
+
+        // Armazena informações adicionais no Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'first_name': _nomeController.text,
+          'last_name': _sobrenomeController.text,
+          'email': user.email ?? user.phoneNumber,
+          'created_at': Timestamp.now(),
+        });
+
+        // Enviar email de verificação se for email
+        if (_isEmailSelected) {
+          await user.sendEmailVerification();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'Perfil atualizado com sucesso! Verifique seu email.')),
+          );
+        }
+
+        // Redireciona para a tela de confirmação de email ou outra tela
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } catch (e) {
+      _mostrarErro('Erro: $e');
+    }
+  }
+
+  void _mostrarErro(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -84,32 +243,68 @@ class _RegistroScreenState extends State<RegistroScreen> {
             _buildSwipeButton(),
             const SizedBox(height: 40),
             _isEmailSelected ? _buildEmailForm() : _buildTelefoneForm(),
-            const SizedBox(height: 40),
-            const Text('ou', textAlign: TextAlign.center),
-            const SizedBox(height: 40),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Lógica para login com Google
-              },
-              icon: Image.asset(
-                'assets/google_logo.png',
-                height: 24.0,
-                width: 24.0,
+            if (!_isEmailSelected && _verificationId != null)
+              Column(
+                children: [
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _smsCodeController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.sms, color: Colors.grey),
+                      labelText: 'Código SMS',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        borderSide: BorderSide(color: Colors.grey),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _verificarCodigoSMS,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: const Color(0xFF4A3497),
+                    ),
+                    child: const Text('Verificar Código'),
+                  ),
+                ],
               ),
-              label: const Text('Entrar com Google'),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.grey.shade300),
-                elevation: 2,
-                shadowColor: Colors.grey.shade100,
-                foregroundColor: Colors.black,
-                textStyle: const TextStyle(fontSize: 16),
+            const SizedBox(height: 40),
+            if (_showAdditionalFields) _buildContinuarRegistroForm(),
+            if (!_showAdditionalFields)
+              Column(
+                children: [
+                  const Text('ou', textAlign: TextAlign.center),
+                  const SizedBox(height: 40),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Lógica para login com Google
+                    },
+                    icon: Image.asset(
+                      'assets/google_logo.png',
+                      height: 24.0,
+                      width: 24.0,
+                    ),
+                    label: const Text('Entrar com Google'),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      elevation: 2,
+                      shadowColor: Colors.grey.shade100,
+                      foregroundColor: Colors.black,
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
-            ),
             const SizedBox(height: 40),
           ],
         ),
@@ -204,18 +399,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
             suffixIcon: Icon(Icons.visibility, color: Colors.grey),
           ),
           obscureText: true,
-          keyboardType: TextInputType.number,
+          keyboardType: TextInputType.visiblePassword,
         ),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _isFormValid
               ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContinuarRegistroScreen(),
-                    ),
-                  );
+                  _registrarComEmail();
                 }
               : null,
           style: ElevatedButton.styleFrom(
@@ -251,12 +441,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
         ElevatedButton(
           onPressed: _isFormValid
               ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const VerificarTelefoneScreen(),
-                    ),
-                  );
+                  _registrarComTelefone();
                 }
               : null,
           style: ElevatedButton.styleFrom(
@@ -273,11 +458,80 @@ class _RegistroScreenState extends State<RegistroScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _senhaController.dispose();
-    _telefoneController.dispose();
-    super.dispose();
+  Widget _buildContinuarRegistroForm() {
+    return Column(
+      children: [
+        const SizedBox(height: 40),
+        const Text(
+          'Continue seu registro',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _nomeController,
+          decoration: const InputDecoration(
+            labelText: 'Por favor digite seu Nome',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, insira seu nome';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _sobrenomeController,
+          decoration: const InputDecoration(
+            labelText: 'Por favor digite seu Sobrenome',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, insira seu sobrenome';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Checkbox(
+              value: _termsAccepted,
+              onChanged: (newValue) {
+                setState(() {
+                  _termsAccepted = newValue!;
+                  _validateForm();
+                });
+              },
+            ),
+            const Expanded(
+              child: Text(
+                'Clicando em Registrar concorda com os termos e condições.',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _isFormValid
+              ? () {
+                  _salvarInformacoesAdicionais();
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            minimumSize: const Size(double.infinity, 50),
+            backgroundColor:
+                _isFormValid ? const Color(0xFF4A3497) : Colors.grey.shade300,
+          ),
+          child: const Text('Finalizar registro'),
+        ),
+      ],
+    );
   }
 }

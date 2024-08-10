@@ -1,8 +1,8 @@
-// Certifique-se de que o caminho está correto
 import 'package:clo/home/tela_home.dart';
 import 'package:clo/registro/email/registro.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,10 +13,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isEmailSelected = true;
+  bool _isPasswordVisible = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   bool _isFormValid = false;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -30,11 +33,64 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       if (_isEmailSelected) {
         _isFormValid = _emailController.text.isNotEmpty &&
-            _senhaController.text.isNotEmpty;
+            _senhaController.text.isNotEmpty &&
+            RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_emailController.text);
       } else {
         _isFormValid = _telefoneController.text.isNotEmpty;
       }
     });
+  }
+
+  Future<void> _loginWithEmailAndPassword() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _senhaController.text.trim(),
+      );
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'user-not-found') {
+        message = 'Usuário não encontrado.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Senha incorreta.';
+      } else {
+        message = 'Ocorreu um erro. Tente novamente.';
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser!.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao fazer login com Google: $e')));
+    }
   }
 
   @override
@@ -84,12 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('ou', textAlign: TextAlign.center),
               const SizedBox(height: 40),
               ElevatedButton.icon(
-                onPressed: () {
-                  // Lógica para login com Google
-                  if (kDebugMode) {
-                    print("Login com Google");
-                  }
-                },
+                onPressed: _loginWithGoogle,
                 icon: Image.asset(
                   'assets/google_logo.png',
                   height: 24.0,
@@ -192,39 +243,30 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 20),
         TextField(
           controller: _senhaController,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.lock, color: Colors.grey),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.lock, color: Colors.grey),
             labelText: 'Senha',
-            border: OutlineInputBorder(
+            border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(color: Colors.grey),
             ),
-            suffixIcon: Icon(Icons.visibility, color: Colors.grey),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isPasswordVisible = !_isPasswordVisible;
+                });
+              },
+            ),
           ),
-          obscureText: true,
+          obscureText: !_isPasswordVisible,
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _isFormValid
-              ? () {
-                  // Lógica de login com email
-                  if (_emailController.text == 'user@example.com' &&
-                      _senhaController.text == 'password') {
-                    // Navegação para a HomeScreen
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  } else {
-                    // Mostra mensagem de erro
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Credenciais inválidas')),
-                    );
-                  }
-                }
-              : null,
+          onPressed: _isFormValid ? _loginWithEmailAndPassword : null,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
