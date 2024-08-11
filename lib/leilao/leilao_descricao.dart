@@ -32,7 +32,7 @@ class AuctionItemDescriptionScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset(
+            Image.network(
               itemImage,
               height: 250,
               fit: BoxFit.contain,

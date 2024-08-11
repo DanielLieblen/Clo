@@ -41,6 +41,7 @@ dependencies:
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.3.0
+  firebase_storage: any
   connectivity_plus: ^3.0.3
   google_sign_in: any
   dotted_border: ^2.0.0

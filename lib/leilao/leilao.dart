@@ -1,23 +1,44 @@
+import 'package:clo/leilao/leilao_descricao.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class AuctionDetailScreen extends StatelessWidget {
-  final String itemName;
-  final String itemImage;
-  final double startingPrice;
-  final double currentPrice;
-  final String timeRemaining;
+class AuctionDetailScreen extends StatefulWidget {
+  final String itemId;
 
-  const AuctionDetailScreen({
-    super.key,
-    required this.itemName,
-    required this.itemImage,
-    required this.startingPrice,
-    required this.currentPrice,
-    required this.timeRemaining,
-  });
+  const AuctionDetailScreen({super.key, required this.itemId});
+
+  @override
+  _AuctionDetailScreenState createState() => _AuctionDetailScreenState();
+}
+
+class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
+  DocumentSnapshot? auctionData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAuctionData();
+  }
+
+  Future<void> _loadAuctionData() async {
+    final auctionDoc =
+        FirebaseFirestore.instance.collection('auctions').doc(widget.itemId);
+
+    final snapshot = await auctionDoc.get();
+    setState(() {
+      auctionData = snapshot;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (auctionData == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -34,23 +55,38 @@ class AuctionDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset(
-              itemImage,
+            Image.network(
+              auctionData!['imagePath'],
               height: 250,
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 20),
-            Text(
-              itemName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AuctionItemDescriptionScreen(
+                      itemName: auctionData!['description'],
+                      itemDescription: auctionData!['description'],
+                      itemImage: auctionData!['imagePath'],
+                      sellerName: auctionData!['seller'],
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                auctionData!['description'],
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
-            const Text(
-              'Petersenote',
-              style: TextStyle(
+            Text(
+              auctionData!['seller'],
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
@@ -59,8 +95,8 @@ class AuctionDetailScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildPriceInfo('Preço Inicial', startingPrice),
-                _buildPriceInfo('Preço Atual', currentPrice),
+                _buildPriceInfo('Preço Inicial', auctionData!['startingBid']),
+                _buildPriceInfo('Preço Atual', auctionData!['currentBid']),
               ],
             ),
             const SizedBox(height: 20),
@@ -76,7 +112,7 @@ class AuctionDetailScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  timeRemaining,
+                  auctionData!['timeRemaining'],
                   style: const TextStyle(color: Colors.red),
                 ),
               ],
@@ -90,7 +126,6 @@ class AuctionDetailScreen extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            // Aqui você pode adicionar uma lista de lances
             const SizedBox(height: 20),
             _buildBidSection(),
           ],
@@ -137,7 +172,8 @@ class AuctionDetailScreen extends StatelessWidget {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
-            // Lógica para dar lance
+            _showBidConfirmationDialog(
+                context, auctionData!['currentPrice'] + 500);
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4A3497),
@@ -169,5 +205,49 @@ class AuctionDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showBidConfirmationDialog(BuildContext context, double bidAmount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Lance Feito'),
+          content:
+              Text('Você deu um lance de R\$ $bidAmount. Confirma este lance?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                _placeBid(bidAmount);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Sim, Confirmar Lance'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _placeBid(double bidAmount) async {
+    final auctionDoc =
+        FirebaseFirestore.instance.collection('auctions').doc(widget.itemId);
+
+    await auctionDoc.update({
+      'currentPrice': bidAmount,
+      'bids': FieldValue.arrayUnion([
+        {
+          'userId': FirebaseAuth.instance.currentUser!.uid,
+          'bidAmount': bidAmount,
+          'timestamp': FieldValue.serverTimestamp(),
+        }
+      ]),
+    });
   }
 }
