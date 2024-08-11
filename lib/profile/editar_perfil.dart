@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,8 +19,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _surnameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-
   String _avatarPath = 'assets/images/profile.jpg';
+  User? user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = FirebaseAuth.instance.currentUser;
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    if (user != null) {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .get();
+
+      setState(() {
+        _nameController.text = userData['nome'];
+        _surnameController.text = userData['sobrenome'];
+        _phoneController.text = userData['celular'];
+        _emailController.text = userData['email'];
+        _avatarPath = userData['fotoUrl'] ?? 'assets/images/profile.jpg';
+      });
+    }
+  }
 
   void _pickImage() async {
     final ImagePicker picker = ImagePicker();
@@ -34,13 +60,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      // Salva as alterações do perfil
-      // Lógica para salvar os dados
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil salvo com sucesso!')),
-      );
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .update({
+          'nome': _nameController.text,
+          'sobrenome': _surnameController.text,
+          'celular': _phoneController.text,
+          'email': _emailController.text,
+          'fotoUrl': _avatarPath.startsWith('assets') ? '' : _avatarPath,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil salvo com sucesso!')),
+        );
+
+        Navigator.pop(context); // Volta para a tela de perfil
+      }
     }
   }
 
@@ -63,7 +102,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () => _pickImage(),
+                  onTap: _pickImage,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -89,7 +128,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const SizedBox(width: 40),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -107,7 +145,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                const SizedBox(width: 40),
                 TextFormField(
                   controller: _surnameController,
                   decoration: const InputDecoration(
@@ -125,7 +162,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                const SizedBox(width: 50),
                 TextFormField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
@@ -145,7 +181,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                const SizedBox(width: 50),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
@@ -166,7 +201,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
-                const SizedBox(width: 60),
                 ElevatedButton(
                   onPressed: _saveProfile,
                   style: ElevatedButton.styleFrom(

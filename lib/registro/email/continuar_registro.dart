@@ -1,12 +1,18 @@
 import 'package:clo/login/login.dart';
-import 'package:clo/registro/email/confirmacao_email.dart';
+import 'package:clo/registro/email/confirmacao_email.dart'; // Importe a tela de confirmação de email
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ContinuarRegistroScreen extends StatefulWidget {
-  const ContinuarRegistroScreen(
-      {super.key, required String email, required String password});
+  final String email;
+  final String password;
+
+  const ContinuarRegistroScreen({
+    super.key,
+    required this.email,
+    required this.password,
+  });
 
   @override
   ContinuarRegistroScreenState createState() => ContinuarRegistroScreenState();
@@ -21,28 +27,26 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Função para verificar se o e-mail já existe no Firestore
-  Future<bool> _emailAlreadyExists(String email) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
-
-    return querySnapshot.docs.isNotEmpty;
-  }
-
   Future<void> _saveAdditionalInfo() async {
     if (_formKey.currentState!.validate() && _termsAccepted) {
       try {
-        User? user = _auth.currentUser;
+        // Realiza o login com o email e senha registrados anteriormente
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: widget.email,
+          password: widget.password,
+        );
+
+        User? user = userCredential.user;
 
         if (user != null) {
           // Verifica se o e-mail já existe no Firestore
-          bool emailExists = await _emailAlreadyExists(user.email!);
+          final querySnapshot = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: user.email)
+              .limit(1)
+              .get();
 
-          if (emailExists) {
-            // Se o e-mail já existe, mostrar mensagem e redirecionar para a tela de login
+          if (querySnapshot.docs.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                   content: Text('Conta já existe. Redirecionando para login.')),
@@ -55,11 +59,11 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
             return;
           }
 
-          // Se a conta não existir, continue com o registro
+          // Atualiza o display name do usuário
           await user.updateDisplayName(
               "${_nomeController.text} ${_sobrenomeController.text}");
 
-          // Armazena informações adicionais no Firestore
+          // Salva as informações adicionais no Firestore
           await _firestore.collection('users').doc(user.uid).set({
             'first_name': _nomeController.text,
             'last_name': _sobrenomeController.text,
@@ -67,7 +71,7 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
             'created_at': Timestamp.now(),
           });
 
-          // Enviar email de verificação
+          // Envia email de verificação
           await user.sendEmailVerification();
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -173,9 +177,7 @@ class ContinuarRegistroScreenState extends State<ContinuarRegistroScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _termsAccepted
-                    ? _saveAdditionalInfo
-                    : null, // Passa diretamente a função para ser executada quando o botão for pressionado
+                onPressed: _termsAccepted ? _saveAdditionalInfo : null,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: _termsAccepted

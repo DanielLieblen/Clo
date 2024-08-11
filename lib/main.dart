@@ -1,7 +1,10 @@
 import 'package:clo/firebase_options.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'home/tela_home.dart'; // Importe a tela inicial para onde o usuário logado será redirecionado
 import 'onboarding/bem_vindo.dart';
 import 'onboarding/onboarding_screen1.dart';
 import 'onboarding/onboarding_screen2.dart';
@@ -19,125 +22,159 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Clo Leilões',
-        theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // TRY THIS: Try running your application with "flutter run". You'll see
-          // the application has a purple toolbar. Then, without quitting the app,
-          // try changing the seedColor in the colorScheme below to Colors.green
-          // and then invoke "hot reload" (save your changes or press the "hot
-          // reload" button in a Flutter-supported IDE, or press "r" if you used
-          // the command line to start the app).
-          //
-          // Notice that the counter didn't reset back to zero; the application
-          // state is not lost during the reload. To reset the state, use hot
-          // restart instead.
-          //
-          // This works for code too, not just values: Most code changes can be
-          // tested with just a hot reload.
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const TelaAbertura(),
-          '/onboarding1': (context) => const OnboardingScreen1(),
-          '/onboarding2': (context) => const OnboardingScreen2(),
-          '/onboarding3': (context) => const OnboardingScreen3(),
-          '/login': (context) => const BemVindoScreen(),
-        });
+      title: 'Clo Leilões',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home:
+          const MainWrapper(), // Altere para MainWrapper, onde você verifica o estado de autenticação
+      routes: {
+        '/onboarding1': (context) => const OnboardingScreen1(),
+        '/onboarding2': (context) => const OnboardingScreen2(),
+        '/onboarding3': (context) => const OnboardingScreen3(),
+        '/login': (context) => const BemVindoScreen(),
+        '/home': (context) => const HomeScreen(), // Tela inicial após login
+      },
+    );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MainWrapper extends StatefulWidget {
+  const MainWrapper({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MainWrapperState createState() => _MainWrapperState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainWrapperState extends State<MainWrapper> {
+  late ConnectivityResult _connectionStatus;
+  final Connectivity _connectivity = Connectivity();
+  bool _hasConnection = true;
+  bool _isLoading = true;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _checkConnection();
+  }
+
+  Future<void> _checkConnection() async {
+    _connectionStatus = await _connectivity.checkConnectivity();
+    _hasConnection = _connectionStatus != ConnectivityResult.none;
+
+    if (_hasConnection) {
+      _checkAuthStatus();
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      _showNoConnectionDialog();
+    }
+  }
+
+  Future<void> _checkAuthStatus() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Se o usuário está autenticado, vá para a tela inicial
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        // Se o usuário não está autenticado, vá para a tela de boas-vindas ou login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const TelaAbertura()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      _showAuthErrorDialog(e.message);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showNoConnectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sem Conexão'),
+        content: const Text(
+            'Você está offline. Verifique sua conexão com a internet e tente novamente.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _checkConnection(); // Tentar reconectar
+            },
+            child: const Text('Tentar Novamente'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _logout(context); // Fazer logout e voltar para a tela de login
+            },
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAuthErrorDialog(String? errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erro de Autenticação'),
+        content: Text(errorMessage ?? 'Ocorreu um erro ao verificar o login.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _checkAuthStatus(); // Tentar novamente a verificação de autenticação
+            },
+            child: const Text('Tentar Novamente'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _logout(context); // Fazer logout e voltar para a tela de login
+            },
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacementNamed(
+        context, '/login'); // Redireciona para a tela de login
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+      );
+    } else {
+      return const Scaffold(
+        body: Center(
+          child: Text('Carregando...'),
+        ),
+      );
+    }
   }
 }

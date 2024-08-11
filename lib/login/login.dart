@@ -2,6 +2,7 @@ import 'package:clo/home/tela_home.dart';
 import 'package:clo/registro/email/registro.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,10 +15,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isEmailSelected = true;
   bool _isPasswordVisible = false;
+  bool _isFormValid = false;
+  bool _codeSent = false;
+  String? _verificationId;
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
-  final TextEditingController _telefoneController = TextEditingController();
-  bool _isFormValid = false;
+  final TextEditingController _telefoneController =
+      TextEditingController(); // Sem texto inicial agora
+  final TextEditingController _smsCodeController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -27,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.addListener(_validateForm);
     _senhaController.addListener(_validateForm);
     _telefoneController.addListener(_validateForm);
+    _smsCodeController.addListener(_validateForm);
   }
 
   void _validateForm() {
@@ -36,7 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
             _senhaController.text.isNotEmpty &&
             RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_emailController.text);
       } else {
-        _isFormValid = _telefoneController.text.isNotEmpty;
+        _isFormValid = _telefoneController.text.length >= 12 &&
+            RegExp(r'^\+\d{12,}$').hasMatch(_telefoneController.text);
       }
     });
   }
@@ -64,6 +72,65 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _loginWithPhoneNumber() async {
+    if (_codeSent) {
+      _verifySmsCode();
+    } else {
+      final String phoneNumber = _telefoneController.text.trim();
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Falha ao verificar número: ${e.message}')));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _verificationId = verificationId;
+            _codeSent = true;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Código de verificação enviado.')),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          setState(() {
+            _verificationId = verificationId;
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _verifySmsCode() async {
+    try {
+      final String smsCode = _smsCodeController.text.trim();
+      if (_verificationId != null) {
+        final AuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: _verificationId!,
+          smsCode: smsCode,
+        );
+        await _auth.signInWithCredential(credential);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Código de verificação inválido.')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao verificar o código: $e')));
     }
   }
 
@@ -98,6 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _senhaController.dispose();
     _telefoneController.dispose();
+    _smsCodeController.dispose();
     super.dispose();
   }
 
@@ -136,6 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _buildSwipeButton(),
               const SizedBox(height: 40),
               _isEmailSelected ? _buildEmailForm() : _buildTelefoneForm(),
+              if (_codeSent && !_isEmailSelected) _buildSmsCodeForm(),
               const SizedBox(height: 40),
               const Text('ou', textAlign: TextAlign.center),
               const SizedBox(height: 40),
@@ -293,31 +362,19 @@ class _LoginScreenState extends State<LoginScreen> {
               borderRadius: BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(color: Colors.grey),
             ),
+            hintText: '+55XXXXXXXXXXX',
           ),
           keyboardType: TextInputType.phone,
+          inputFormatters: [
+            // Restrict the input to start with "+55" and only allow numbers after that
+            FilteringTextInputFormatter.allow(RegExp(r'^\+?(\d*)$')),
+            LengthLimitingTextInputFormatter(
+                14), // Limit length to "+55XXXXXXXXXXX"
+          ],
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _isFormValid
-              ? () {
-                  // Lógica de login com telefone
-                  if (_telefoneController.text == '123456789') {
-                    // Navegação para a HomeScreen
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  } else {
-                    // Mostra mensagem de erro
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Número de telefone inválido')),
-                    );
-                  }
-                }
-              : null,
+          onPressed: _isFormValid ? _loginWithPhoneNumber : null,
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -326,7 +383,39 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor:
                 _isFormValid ? const Color(0xFF4A3497) : Colors.grey.shade300,
           ),
-          child: const Text('Entrar'),
+          child: Text(_codeSent ? 'Verificar Código' : 'Enviar Código'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSmsCodeForm() {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        TextField(
+          controller: _smsCodeController,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.sms, color: Colors.grey),
+            labelText: 'Código SMS',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _verifySmsCode,
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            minimumSize: const Size(double.infinity, 50),
+            backgroundColor: const Color(0xFF4A3497),
+          ),
+          child: const Text('Verificar Código'),
         ),
       ],
     );

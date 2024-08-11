@@ -15,6 +15,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
   bool _showAdditionalFields = false;
   bool _isFormValid = false;
   bool _termsAccepted = false;
+  bool _isSenhaVisible =
+      false; // Novo estado para controlar a visibilidade da senha
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
@@ -146,21 +148,56 @@ class _RegistroScreenState extends State<RegistroScreen> {
           verificationId: _verificationId!,
           smsCode: code,
         );
-        await _auth.signInWithCredential(credential);
-        setState(() {
-          _showAdditionalFields = true;
-        });
+        UserCredential userCredential =
+            await _auth.signInWithCredential(credential);
+        User? user = userCredential.user;
 
-        // Redireciona para a tela home após a verificação
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        if (user != null) {
+          // Carrega os dados adicionais do usuário
+          await _salvarInformacoesAdicionaisComTelefone(user);
+
+          // Redireciona para a tela home após a verificação
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          _mostrarErro('Falha ao verificar o código SMS.');
+        }
       } else {
         _mostrarErro('Código de verificação inválido.');
       }
     } catch (e) {
       _mostrarErro('Erro ao verificar código: $e');
+    }
+  }
+
+  Future<void> _salvarInformacoesAdicionaisComTelefone(User user) async {
+    try {
+      // Verifica se a coleção 'users' já possui um documento para este usuário
+      DocumentReference userDocRef =
+          _firestore.collection('users').doc(user.uid);
+
+      // Tenta buscar o documento do usuário
+      DocumentSnapshot userDoc = await userDocRef.get();
+
+      if (!userDoc.exists) {
+        // Se o documento não existir, cria um novo com os dados do usuário
+        await userDocRef.set({
+          'first_name': _nomeController.text,
+          'last_name': _sobrenomeController.text,
+          'email': user.phoneNumber, // Usando o número de telefone como email
+          'celular': _telefoneController.text,
+          'fotoUrl': 'assets/images/profile.jpg', // URL padrão da foto
+          'created_at': Timestamp.now(),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+        );
+      }
+    } catch (e) {
+      _mostrarErro('Erro ao salvar informações adicionais: $e');
     }
   }
 
@@ -173,23 +210,34 @@ class _RegistroScreenState extends State<RegistroScreen> {
         await user.updateDisplayName(
             "${_nomeController.text} ${_sobrenomeController.text}");
 
-        // Armazena informações adicionais no Firestore
-        await _firestore.collection('users').doc(user.uid).set({
-          'first_name': _nomeController.text,
-          'last_name': _sobrenomeController.text,
-          'email': user.email ?? user.phoneNumber,
-          'created_at': Timestamp.now(),
-        });
+        // Verifica se a coleção 'users' já possui um documento para este usuário
+        DocumentReference userDocRef =
+            _firestore.collection('users').doc(user.uid);
 
-        // Enviar email de verificação se for email
-        if (_isEmailSelected) {
-          await user.sendEmailVerification();
+        // Tenta buscar o documento do usuário
+        DocumentSnapshot userDoc = await userDocRef.get();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Perfil atualizado com sucesso! Verifique seu email.')),
-          );
+        if (!userDoc.exists) {
+          // Se o documento não existir, cria um novo com os dados do usuário
+          await userDocRef.set({
+            'first_name': _nomeController.text,
+            'last_name': _sobrenomeController.text,
+            'email': user.email ?? user.phoneNumber,
+            'celular': _telefoneController.text,
+            'fotoUrl': 'assets/images/profile.jpg', // URL padrão da foto
+            'created_at': Timestamp.now(),
+          });
+
+          // Enviar email de verificação se for email
+          if (_isEmailSelected) {
+            await user.sendEmailVerification();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'Perfil atualizado com sucesso! Verifique seu email.')),
+            );
+          }
         }
 
         // Redireciona para a tela de confirmação de email ou outra tela
@@ -389,16 +437,26 @@ class _RegistroScreenState extends State<RegistroScreen> {
         const SizedBox(height: 20),
         TextField(
           controller: _senhaController,
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.lock, color: Colors.grey),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.lock, color: Colors.grey),
             labelText: 'Senha',
-            border: OutlineInputBorder(
+            border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(color: Colors.grey),
             ),
-            suffixIcon: Icon(Icons.visibility, color: Colors.grey),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isSenhaVisible ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isSenhaVisible = !_isSenhaVisible;
+                });
+              },
+            ),
           ),
-          obscureText: true,
+          obscureText: !_isSenhaVisible,
           keyboardType: TextInputType.visiblePassword,
         ),
         const SizedBox(height: 20),
