@@ -1,143 +1,171 @@
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
-class CreateAuctionScreen extends StatelessWidget {
-  const CreateAuctionScreen({super.key});
+class AuctionDetailScreen extends StatelessWidget {
+  final String itemName;
+  final String itemImage;
+  final double startingPrice;
+  final double currentPrice;
+  final String timeRemaining;
+
+  const AuctionDetailScreen({
+    super.key,
+    required this.itemName,
+    required this.itemImage,
+    required this.startingPrice,
+    required this.currentPrice,
+    required this.timeRemaining,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Criar Leilão',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-          ),
-        ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Vendedor',
-                border: OutlineInputBorder(),
+            Image.asset(
+              itemImage,
+              height: 250,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              itemName,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Descrição do Produto',
-                border: OutlineInputBorder(),
+            const Text(
+              'Petersenote',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
               ),
-              maxLines: 3,
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Categoria',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Eletrodomestico',
-                  child: Text('Eletrodoméstico'),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildPriceInfo('Preço Inicial', startingPrice),
+                _buildPriceInfo('Preço Atual', currentPrice),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const CircleAvatar(
+                  backgroundImage: AssetImage('assets/images/profile.jpg'),
                 ),
-                DropdownMenuItem(
-                  value: 'Eletronico',
-                  child: Text('Eletrônico'),
+                const SizedBox(width: 10),
+                const Text(
+                  'em live',
+                  style: TextStyle(color: Colors.grey),
                 ),
-                DropdownMenuItem(
-                  value: 'Movel',
-                  child: Text('Móvel'),
+                const Spacer(),
+                Text(
+                  timeRemaining,
+                  style: const TextStyle(color: Colors.red),
                 ),
               ],
-              onChanged: (value) {
-                // Lógica para alteração da categoria
-              },
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Lance Mínimo',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Lance Máximo',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () {
-                // Lógica para upload de imagens
-              },
-              child: DottedBorder(
-                color: const Color(0xFF4A3497),
-                strokeWidth: 2,
-                dashPattern: const [6, 3],
-                borderType: BorderType.RRect,
-                radius: const Radius.circular(12),
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  alignment: Alignment.center,
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 50,
-                        color: Color(0xFF4A3497),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Upload de Imagens',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          color: Color(0xFF4A3497),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 20),
+            const Text(
+              'Lances',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                // Lógica para criar leilão
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: const Color(0xFF4A3497), // Cor do botão
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Criar Leilão',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                ),
-              ),
-            ),
+            // Aqui você pode adicionar uma lista de lances
+            const SizedBox(height: 20),
+            _buildBidSection(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceInfo(String title, double price) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          'R\$ $price',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBidSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            _buildBidButton('R\$1.000'),
+            _buildBidButton('R\$2.000'),
+            _buildBidButton('Preço Customizado'),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: () {
+            // Lógica para dar lance
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4A3497),
+            minimumSize: const Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Dar Lance'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBidButton(String label) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.all(5),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.black),
+          ),
         ),
       ),
     );
