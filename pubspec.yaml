@@ -36,8 +36,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   animated_widgets: ^1.1.0
-  font_awesome_flutter: ^10.1.0
+  font_awesome_flutter: ^10.4.0
   flutter_swiper_plus: ^2.0.0
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.3.0
+  connectivity_plus: ^3.0.3
+  google_sign_in: any
+  dotted_border: ^2.0.0
+  image_picker: ^0.8.7+3 # ou a versão mais recente
 
 
 dev_dependencies:
@@ -50,7 +57,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -66,10 +72,34 @@ flutter:
   assets:
     - assets/logo.png
     - assets/logo2.png
+    - assets/images/tecnologia.png
+    - assets/images/rpg.jpg
+    - assets/images/vestiario.jpg
+    - assets/icons/Compass.png
+    - assets/icons/Bell.png
+    - assets/icons/equalizer.png
+    - assets/images/game.png
+    - assets/images/vaso_planta.jpg
+    - assets/verification_image.png
     - assets/google_logo.png
     - assets/intro1.png
     - assets/intro2.png
     - assets/intro3.png
+    - assets/icons/home.png
+    - assets/icons/Compass.png
+    - assets/icons/categories_icon.png
+    - assets/icons/notifications_icon.png
+    - assets/images/mouse.jpg
+    - assets/images/teclado.jpg
+    - assets/images/monitor.jpg
+    - assets/images/headset.jpg
+    - assets/images/cadeira.jpg
+    - assets/images/gpu.jpg
+    - assets/images/pc_gamer.jpg
+    - assets/images/rpg.jpg
+    - assets/images/vaso_planta.jpg
+    - assets/images/game.png
+
 
 
 
