@@ -1,9 +1,10 @@
-import 'package:clo/registro/registro_telefone.dart';
+import 'package:clo/login/login.dart';
+import 'package:clo/registro/email/registro.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class BemVindoScreen extends StatelessWidget {
+  const BemVindoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,15 +45,18 @@ class LoginScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => RegistroTelefoneScreen()), // Navegação para tela de login
-                    );
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const RegistroScreen()), // Navegação para tela de login
+                    ); //lembrar que o telefone eh padrao portanto ela é a tela principal de registro
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A3497), // Cor do botão
-                    minimumSize: const Size(double.infinity, 50), // Largura cheia
+                    minimumSize:
+                        const Size(double.infinity, 50), // Largura cheia
                     shape: RoundedRectangleBorder(
                       borderRadius:
-                      BorderRadius.circular(10.0), // Borda quadrada
+                          BorderRadius.circular(10.0), // Borda quadrada
                     ),
                   ),
                   child: const Text(
@@ -70,15 +74,23 @@ class LoginScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: OutlinedButton(
                   onPressed: () {
-
+                    print("alguma coisa");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const LoginScreen()), // Navegação para tela de login
+                    );
                     // Adicione a navegação para a tela de login aqui
                   },
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF4A3497)), // Cor da borda
-                    minimumSize: const Size(double.infinity, 50), // Largura cheia
+                    side: const BorderSide(
+                        color: Color(0xFF4A3497)), // Cor da borda
+                    minimumSize:
+                        const Size(double.infinity, 50), // Largura cheia
                     shape: RoundedRectangleBorder(
                       borderRadius:
-                      BorderRadius.circular(10.0), // Borda quadrada
+                          BorderRadius.circular(10.0), // Borda quadrada
                     ),
                   ),
                   child: const Text(
@@ -104,11 +116,14 @@ class LoginScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const FaIcon(FontAwesomeIcons.facebook, size: 40, color: Colors.blue),
+                      const FaIcon(FontAwesomeIcons.facebook,
+                          size: 40, color: Colors.blue),
                       const SizedBox(width: 30),
-                      Image.asset('assets/google_logo.png', height: 40, width: 40), // Logotipo colorido do Google
+                      Image.asset('assets/google_logo.png',
+                          height: 40, width: 40), // Logotipo colorido do Google
                       const SizedBox(width: 30),
-                      const FaIcon(FontAwesomeIcons.apple, size: 40, color: Colors.black),
+                      const FaIcon(FontAwesomeIcons.apple,
+                          size: 40, color: Colors.black),
                     ],
                   ),
                 ],
