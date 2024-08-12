@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class CreateAuctionScreen extends StatefulWidget {
   const CreateAuctionScreen({super.key});
@@ -15,13 +16,45 @@ class CreateAuctionScreen extends StatefulWidget {
 }
 
 class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
-  final TextEditingController _sellerController = TextEditingController();
+  final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _startingBidController = TextEditingController();
   final TextEditingController _maxBidController = TextEditingController();
   String? _selectedCategory;
+  String? _selectedDuration;
+  String? _sellerName; // Nome do vendedor (usuário)
   File? _imageFile; // Para armazenar a imagem selecionada
   bool _isUploading = false; // Para controlar o estado de upload
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (userDoc.exists) {
+          setState(() {
+            _sellerName =
+                "${userDoc['first_name']} ${userDoc['last_name']}"; // Assumindo que os campos 'nome' e 'sobrenome' existem
+          });
+        } else {
+          print('Documento do usuário não encontrado.');
+        }
+      } else {
+        print('Usuário não autenticado.');
+      }
+    } catch (e) {
+      print('Erro ao carregar o nome do usuário: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,21 +78,24 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            TextFormField(
-              controller: _sellerController,
-              decoration: const InputDecoration(
-                labelText: 'Vendedor',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            _sellerName == null
+                ? const Center(child: CircularProgressIndicator())
+                : TextFormField(
+                    initialValue: _sellerName,
+                    decoration: const InputDecoration(
+                      labelText: 'Vendedor',
+                      border: OutlineInputBorder(),
+                    ),
+                    readOnly: true, // Campo somente leitura, não editável
+                  ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _descriptionController,
+              controller:
+                  _productNameController, // Campo para o nome do produto
               decoration: const InputDecoration(
-                labelText: 'Descrição do Produto',
+                labelText: 'Nome do Produto',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -104,8 +140,18 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
               onChanged: (value) {
                 setState(() {
                   _selectedCategory = value;
+                  _suggestMaxBid(); // Sugerir o lance máximo com base na categoria
                 });
               },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Descrição do Produto',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -124,6 +170,44 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                labelText: 'Duração do Leilão',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: '5d',
+                  child: Text('5 dias'),
+                ),
+                DropdownMenuItem(
+                  value: '3d',
+                  child: Text('3 dias'),
+                ),
+                DropdownMenuItem(
+                  value: '1d',
+                  child: Text('1 dia'),
+                ),
+                DropdownMenuItem(
+                  value: '8h',
+                  child: Text('8 horas'),
+                ),
+                DropdownMenuItem(
+                  value: '5h',
+                  child: Text('5 horas'),
+                ),
+                DropdownMenuItem(
+                  value: '1h',
+                  child: Text('1 hora'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedDuration = value;
+                });
+              },
             ),
             const SizedBox(height: 16),
             GestureDetector(
@@ -193,6 +277,26 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
     );
   }
 
+  Future<void> testFirestore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('testCollection')
+            .doc(user.uid)
+            .set({
+          'testField': 'testValue',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        print('Documento de teste criado com sucesso!');
+      } else {
+        print('Erro: Usuário não autenticado.');
+      }
+    } catch (e) {
+      print('Erro ao criar documento de teste: $e');
+    }
+  }
+
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -201,12 +305,78 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       setState(() {
         _imageFile = File(pickedFile.path);
       });
+    } else {
+      print('Nenhuma imagem selecionada.');
+    }
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('Erro: Usuário não autenticado');
+        return;
+      }
+
+      if (_imageFile == null) {
+        print('Erro: Nenhuma imagem selecionada.');
+        return;
+      }
+
+      // Caminho do arquivo no Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('auction_images')
+          .child('${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      print('Iniciando upload da imagem para: ${storageRef.fullPath}');
+
+      final uploadTask = storageRef.putFile(_imageFile!);
+      final snapshot = await uploadTask.whenComplete(() {});
+
+      final imageUrl = await snapshot.ref.getDownloadURL();
+      print('Imagem carregada com sucesso, URL: $imageUrl');
+
+      // Código para criação do documento no Firestore...
+    } catch (e) {
+      print('Erro ao criar leilão: $e');
+    }
+  }
+
+  Future<void> _suggestMaxBid() async {
+    if (_selectedCategory == null) return;
+
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collectionGroup('auctions')
+          .where('category', isEqualTo: _selectedCategory)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Calcula a média dos lances máximos dos produtos similares
+        double total = 0;
+        for (var doc in querySnapshot.docs) {
+          total += doc['currentBid'] as double;
+        }
+        double averageMaxBid = total / querySnapshot.docs.length;
+
+        setState(() {
+          _maxBidController.text = averageMaxBid.toStringAsFixed(2);
+        });
+      } else {
+        // Caso não haja produtos similares, define um valor padrão
+        setState(() {
+          _maxBidController.text = '1000.00';
+        });
+      }
+    } catch (e) {
+      print('Erro ao sugerir lance máximo: $e');
     }
   }
 
   Future<void> _createAuction() async {
-    if (_imageFile == null) {
-      // Trate o caso onde a imagem não foi selecionada
+    if (_imageFile == null ||
+        _selectedDuration == null ||
+        _sellerName == null) {
+      print('Erro: Campos obrigatórios não foram preenchidos.');
       return;
     }
 
@@ -217,7 +387,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        // Trate o caso onde o usuário não está autenticado
+        print('Erro: Usuário não autenticado');
         return;
       }
 
@@ -231,6 +401,32 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       final snapshot = await uploadTask.whenComplete(() {});
       final imageUrl = await snapshot.ref.getDownloadURL();
 
+      // Calculando o tempo final do leilão
+      final DateTime now = DateTime.now();
+      late DateTime endTime;
+      switch (_selectedDuration) {
+        case '5d':
+          endTime = now.add(const Duration(days: 5));
+          break;
+        case '3d':
+          endTime = now.add(const Duration(days: 3));
+          break;
+        case '1d':
+          endTime = now.add(const Duration(days: 1));
+          break;
+        case '8h':
+          endTime = now.add(const Duration(hours: 8));
+          break;
+        case '5h':
+          endTime = now.add(const Duration(hours: 5));
+          break;
+        case '1h':
+          endTime = now.add(const Duration(hours: 1));
+          break;
+        default:
+          endTime = now.add(const Duration(days: 1));
+      }
+
       // Criar o documento do leilão no Firestore
       final auctionDoc = FirebaseFirestore.instance
           .collection('users')
@@ -239,7 +435,8 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           .doc();
 
       await auctionDoc.set({
-        'seller': _sellerController.text,
+        'productName': _productNameController.text, // Nome do produto
+        'seller': _sellerName,
         'description': _descriptionController.text,
         'category': _selectedCategory,
         'startingBid': double.parse(_startingBidController.text),
@@ -247,14 +444,15 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
             _startingBidController.text), // Inicialmente igual ao lance mínimo
         'imagePath': imageUrl, // Caminho da imagem no Firebase Storage
         'views': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-        'timeRemaining': '01:23:45', // Atualize conforme necessário
+        'createdAt': now,
+        'endTime': endTime,
+        'timeRemaining': DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime),
         'bids': [], // Lista de lances
       });
 
+      print('Leilão criado com sucesso');
       Navigator.pop(context);
     } catch (e) {
-      // Trate erros aqui
       print('Erro ao criar leilão: $e');
     } finally {
       setState(() {
