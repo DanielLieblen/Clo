@@ -19,7 +19,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _startingBidController = TextEditingController();
-  final TextEditingController _maxBidController = TextEditingController();
   String? _selectedCategory;
   String? _selectedDuration;
   String? _sellerName; // Nome do vendedor (usuário)
@@ -140,7 +139,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
               onChanged: (value) {
                 setState(() {
                   _selectedCategory = value;
-                  _suggestMaxBid(); // Sugerir o lance máximo com base na categoria
                 });
               },
             ),
@@ -158,15 +156,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
               controller: _startingBidController,
               decoration: const InputDecoration(
                 labelText: 'Lance Mínimo',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _maxBidController,
-              decoration: const InputDecoration(
-                labelText: 'Lance Máximo',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
@@ -277,26 +266,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
     );
   }
 
-  Future<void> testFirestore() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('testCollection')
-            .doc(user.uid)
-            .set({
-          'testField': 'testValue',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        print('Documento de teste criado com sucesso!');
-      } else {
-        print('Erro: Usuário não autenticado.');
-      }
-    } catch (e) {
-      print('Erro ao criar documento de teste: $e');
-    }
-  }
-
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -307,68 +276,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       });
     } else {
       print('Nenhuma imagem selecionada.');
-    }
-
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print('Erro: Usuário não autenticado');
-        return;
-      }
-
-      if (_imageFile == null) {
-        print('Erro: Nenhuma imagem selecionada.');
-        return;
-      }
-
-      // Caminho do arquivo no Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('auction_images')
-          .child('${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg');
-
-      print('Iniciando upload da imagem para: ${storageRef.fullPath}');
-
-      final uploadTask = storageRef.putFile(_imageFile!);
-      final snapshot = await uploadTask.whenComplete(() {});
-
-      final imageUrl = await snapshot.ref.getDownloadURL();
-      print('Imagem carregada com sucesso, URL: $imageUrl');
-
-      // Código para criação do documento no Firestore...
-    } catch (e) {
-      print('Erro ao criar leilão: $e');
-    }
-  }
-
-  Future<void> _suggestMaxBid() async {
-    if (_selectedCategory == null) return;
-
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collectionGroup('auctions')
-          .where('category', isEqualTo: _selectedCategory)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        // Calcula a média dos lances máximos dos produtos similares
-        double total = 0;
-        for (var doc in querySnapshot.docs) {
-          total += doc['currentBid'] as double;
-        }
-        double averageMaxBid = total / querySnapshot.docs.length;
-
-        setState(() {
-          _maxBidController.text = averageMaxBid.toStringAsFixed(2);
-        });
-      } else {
-        // Caso não haja produtos similares, define um valor padrão
-        setState(() {
-          _maxBidController.text = '1000.00';
-        });
-      }
-    } catch (e) {
-      print('Erro ao sugerir lance máximo: $e');
     }
   }
 
@@ -396,6 +303,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           .ref()
           .child('auction_images')
           .child('${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      print('Caminho de upload: ${storageRef.fullPath}');
 
       final uploadTask = storageRef.putFile(_imageFile!);
       final snapshot = await uploadTask.whenComplete(() {});
@@ -448,6 +356,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
         'endTime': endTime,
         'timeRemaining': DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime),
         'bids': [], // Lista de lances
+        'winner': null, // Inicialmente, não há vencedor
       });
 
       print('Leilão criado com sucesso');
@@ -458,6 +367,35 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       setState(() {
         _isUploading = false;
       });
+    }
+  }
+
+  // Função para verificar se o leilão terminou e determinar o vencedor
+  Future<void> checkAuctionEnd() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('Erro: Usuário não autenticado');
+      return;
+    }
+
+    final auctions = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('auctions')
+        .where('endTime', isLessThanOrEqualTo: DateTime.now())
+        .where('winner', isEqualTo: null)
+        .get();
+
+    for (var auction in auctions.docs) {
+      final bids = auction['bids'] as List<dynamic>;
+      if (bids.isNotEmpty) {
+        bids.sort((a, b) => b['amount'].compareTo(a['amount']));
+        final winner = bids.first['bidder'];
+        await auction.reference.update({'winner': winner});
+        print('Vencedor do leilão ${auction.id}: $winner');
+      } else {
+        print('Leilão ${auction.id} terminou sem lances.');
+      }
     }
   }
 }

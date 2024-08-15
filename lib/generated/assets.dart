@@ -2,16 +2,17 @@
 class Assets {
   Assets._();
 
+  static const String assetsDados clo = 'assets/dados clo.txt';
   static const String assetsGoogleLogo = 'assets/google_logo.png';
   static const String assetsIconsBell = 'assets/icons/Bell.png';
-  static const String assetsIconsCategoriesIcon =
-      'assets/icons/categories_icon.png';
+  static const String assetsIconsCategoriesIcon = 'assets/icons/categories_icon.png';
   static const String assetsIconsCompass = 'assets/icons/Compass.png';
   static const String assetsIconsEqualizer = 'assets/icons/equalizer.png';
   static const String assetsIconsHome = 'assets/icons/home.png';
+  static const String assetsIconsNotificationsIcon = 'assets/icons/notifications_icon.png';
   static const String assetsImagesCadeira = 'assets/images/cadeira.jpg';
   static const String assetsImagesGame = 'assets/images/game.png';
-  static const String assetsImagesGepuVeia = 'assets/images/gepu_veia.jpg';
+  static const String assetsImagesGpu = 'assets/images/gpu.jpg';
   static const String assetsImagesHeadset = 'assets/images/headset.jpg';
   static const String assetsImagesMonitor = 'assets/images/monitor.jpg';
   static const String assetsImagesMouse = 'assets/images/mouse.jpg';
@@ -34,62 +35,42 @@ class Assets {
   static const String cloAssetsIntro3 = 'assets/intro3.png';
   static const String cloAssetsLogo = 'assets/logo.png';
   static const String cloAssetsLogo2 = 'assets/logo2.png';
-  static const String cloAssetsVerificationImage =
-      'assets/verification_image.png';
-  static const String fontsMerriweatherBlack =
-      'assets/fonts/Merriweather-Black.ttf';
-  static const String fontsMerriweatherBlackItalic =
-      'assets/fonts/Merriweather-BlackItalic.ttf';
-  static const String fontsMerriweatherBold =
-      'assets/fonts/Merriweather-Bold.ttf';
-  static const String fontsMerriweatherBoldItalic =
-      'assets/fonts/Merriweather-BoldItalic.ttf';
-  static const String fontsMerriweatherItalic =
-      'assets/fonts/Merriweather-Italic.ttf';
-  static const String fontsMerriweatherLight =
-      'assets/fonts/Merriweather-Light.ttf';
-  static const String fontsMerriweatherLightItalic =
-      'assets/fonts/Merriweather-LightItalic.ttf';
-  static const String fontsMerriweatherRegular =
-      'assets/fonts/Merriweather-Regular.ttf';
+  static const String cloAssetsVerificationImage = 'assets/verification_image.png';
+  static const String fontsMerriweatherBlack = 'assets/fonts/Merriweather-Black.ttf';
+  static const String fontsMerriweatherBlackItalic = 'assets/fonts/Merriweather-BlackItalic.ttf';
+  static const String fontsMerriweatherBold = 'assets/fonts/Merriweather-Bold.ttf';
+  static const String fontsMerriweatherBoldItalic = 'assets/fonts/Merriweather-BoldItalic.ttf';
+  static const String fontsMerriweatherItalic = 'assets/fonts/Merriweather-Italic.ttf';
+  static const String fontsMerriweatherLight = 'assets/fonts/Merriweather-Light.ttf';
+  static const String fontsMerriweatherLightItalic = 'assets/fonts/Merriweather-LightItalic.ttf';
+  static const String fontsMerriweatherRegular = 'assets/fonts/Merriweather-Regular.ttf';
   static const String fontsOFL = 'assets/fonts/OFL.txt';
   static const String fontsPoppinsBlack = 'assets/fonts/Poppins-Black.ttf';
-  static const String fontsPoppinsBlackItalic =
-      'assets/fonts/Poppins-BlackItalic.ttf';
+  static const String fontsPoppinsBlackItalic = 'assets/fonts/Poppins-BlackItalic.ttf';
   static const String fontsPoppinsBold = 'assets/fonts/Poppins-Bold.ttf';
-  static const String fontsPoppinsBoldItalic =
-      'assets/fonts/Poppins-BoldItalic.ttf';
-  static const String fontsPoppinsExtraBold =
-      'assets/fonts/Poppins-ExtraBold.ttf';
-  static const String fontsPoppinsExtraBoldItalic =
-      'assets/fonts/Poppins-ExtraBoldItalic.ttf';
-  static const String fontsPoppinsExtraLight =
-      'assets/fonts/Poppins-ExtraLight.ttf';
-  static const String fontsPoppinsExtraLightItalic =
-      'assets/fonts/Poppins-ExtraLightItalic.ttf';
+  static const String fontsPoppinsBoldItalic = 'assets/fonts/Poppins-BoldItalic.ttf';
+  static const String fontsPoppinsExtraBold = 'assets/fonts/Poppins-ExtraBold.ttf';
+  static const String fontsPoppinsExtraBoldItalic = 'assets/fonts/Poppins-ExtraBoldItalic.ttf';
+  static const String fontsPoppinsExtraLight = 'assets/fonts/Poppins-ExtraLight.ttf';
+  static const String fontsPoppinsExtraLightItalic = 'assets/fonts/Poppins-ExtraLightItalic.ttf';
   static const String fontsPoppinsItalic = 'assets/fonts/Poppins-Italic.ttf';
   static const String fontsPoppinsLight = 'assets/fonts/Poppins-Light.ttf';
-  static const String fontsPoppinsLightItalic =
-      'assets/fonts/Poppins-LightItalic.ttf';
+  static const String fontsPoppinsLightItalic = 'assets/fonts/Poppins-LightItalic.ttf';
   static const String fontsPoppinsMedium = 'assets/fonts/Poppins-Medium.ttf';
-  static const String fontsPoppinsMediumItalic =
-      'assets/fonts/Poppins-MediumItalic.ttf';
+  static const String fontsPoppinsMediumItalic = 'assets/fonts/Poppins-MediumItalic.ttf';
   static const String fontsPoppinsRegular = 'assets/fonts/Poppins-Regular.ttf';
-  static const String fontsPoppinsSemiBold =
-      'assets/fonts/Poppins-SemiBold.ttf';
-  static const String fontsPoppinsSemiBoldItalic =
-      'assets/fonts/Poppins-SemiBoldItalic.ttf';
+  static const String fontsPoppinsSemiBold = 'assets/fonts/Poppins-SemiBold.ttf';
+  static const String fontsPoppinsSemiBoldItalic = 'assets/fonts/Poppins-SemiBoldItalic.ttf';
   static const String fontsPoppinsThin = 'assets/fonts/Poppins-Thin.ttf';
-  static const String fontsPoppinsThinItalic =
-      'assets/fonts/Poppins-ThinItalic.ttf';
+  static const String fontsPoppinsThinItalic = 'assets/fonts/Poppins-ThinItalic.ttf';
   static const String iconsBell = 'assets/icons/Bell.png';
   static const String iconsCategoriesIcon = 'assets/icons/categories_icon.png';
   static const String iconsCompass = 'assets/icons/Compass.png';
   static const String iconsEqualizer = 'assets/icons/equalizer.png';
-  static const String iconsHeroiconsSolidHome =
-      'assets/icons/heroicons-solid_home.png';
+  static const String iconsHeroiconsSolidHome = 'assets/icons/heroicons-solid_home.png';
   static const String iconsHome = 'assets/icons/home.png';
   static const String iconsHome1 = 'assets/icons/home1.png';
+  static const String iconsNotificationsIcon = 'assets/icons/notifications_icon.png';
   static const String iconsProfile = 'assets/icons/profile.png';
   static const String imagesCadeira = 'assets/images/cadeira.jpg';
   static const String imagesGame = 'assets/images/game.png';
@@ -106,4 +87,5 @@ class Assets {
   static const String imagesVasoPlanta = 'assets/images/vaso_planta.jpg';
   static const String imagesVestiario = 'assets/images/vestiario.jpg';
   static const String imagesVestiario2 = 'assets/images/vestiario2.png';
+
 }
