@@ -22,7 +22,7 @@ class HomeScreen extends StatelessWidget {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Eletrodomésticos, Joias...',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.tune),
+                    icon: const Icon(Icons.tune),
                     color: Colors.white,
                     onPressed: () {
                       // Ação para o botão de preferências de pesquisa
@@ -100,7 +100,7 @@ class HomeScreen extends StatelessWidget {
           BottomNavigationBarItem(
               icon: Icon(Icons.notifications), label: 'Notificações'),
         ],
-        selectedItemColor: Color(0xFF4A3497), // Cor personalizada do projeto
+        selectedItemColor: const Color(0xFF4A3497), // Cor personalizada do projeto
       ),
     );
   }

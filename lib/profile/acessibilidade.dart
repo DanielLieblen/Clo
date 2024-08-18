@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AcessibilidadeScreen extends StatelessWidget {
-  const AcessibilidadeScreen({Key? key}) : super(key: key);
+  const AcessibilidadeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

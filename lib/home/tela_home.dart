@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:clo/leilao/criar_leilao.dart';
 import 'package:clo/leilao/leilao.dart';
 import 'package:clo/profile/perfil.dart';
 import 'package:clo/search/pesquisa.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,9 +20,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
+  String? _userName;
+  String? _profileImageUrl;
+  File? _imageFile;
   String? _selectedCategory;
   RangeValues _selectedPriceRange = const RangeValues(0, 1000);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (userDoc.exists) {
+        setState(() {
+          _userName = userDoc['first_name'] ?? 'Usuário';
+          _profileImageUrl = userDoc['profileImageUrl'];
+        });
+      }
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,6 +58,47 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(builder: (context) => const PerfilScreen()),
       );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+        _uploadProfileImage();
+      });
+    }
+  }
+
+  Future<void> _uploadProfileImage() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _imageFile == null) return;
+
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child('${user.uid}.jpg');
+      final uploadTask = storageRef.putFile(_imageFile!);
+      final snapshot = await uploadTask.whenComplete(() {});
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'profileImageUrl': downloadUrl});
+
+      setState(() {
+        _profileImageUrl = downloadUrl;
+      });
+
+      print('Upload bem-sucedido: $downloadUrl');
+      _loadUserProfile();
+    } catch (e) {
+      print('Erro ao fazer upload da imagem: $e');
     }
   }
 
@@ -93,7 +162,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         value: 'Banho',
                         child: Text('Banho'),
                       ),
-                      // Adicione mais categorias conforme necessário
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -122,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // Fecha o BottomSheet
+                      Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -148,6 +216,34 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         );
       },
+    );
+  }
+
+  void _navigateToAllCategories(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AllCategoriesScreen()),
+    );
+  }
+
+  void _navigateToCategoryAuctions(BuildContext context, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryAuctionsScreen(category: category),
+      ),
+    );
+  }
+
+  void _onSearchSubmitted(String query) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PesquisaScreen(
+          selectedCategory: query.isNotEmpty ? query : null,
+          selectedPriceRange: _selectedPriceRange,
+        ),
+      ),
     );
   }
 
@@ -222,20 +318,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildUserInfo() {
-    return const Row(
+    return Row(
       children: [
-        CircleAvatar(
-          backgroundImage: AssetImage(
-              'assets/images/profile.jpg'), // Substitua pelo caminho correto
-          radius: 30,
+        GestureDetector(
+          onTap: _pickImage,
+          child: CircleAvatar(
+            backgroundImage: _profileImageUrl != null
+                ? NetworkImage(_profileImageUrl!)
+                : const AssetImage('assets/images/default_profile.jpg')
+                    as ImageProvider,
+            radius: 30,
+          ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Oi, Alan',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text('Vamos começar os Lances!',
+            Text(_userName ?? 'Usuário',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Vamos começar os Lances!',
                 style: TextStyle(fontSize: 16, color: Colors.grey)),
           ],
         ),
@@ -255,6 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
+            onSubmitted: _onSearchSubmitted,
           ),
         ),
         const SizedBox(width: 10),
@@ -269,49 +372,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoriesSection() {
+    final categories = [
+      {'name': 'Tecnologia', 'imagePath': 'assets/images/tecnologia.png'},
+      {'name': 'Jogos', 'imagePath': 'assets/images/game.png'},
+      {'name': 'Monitores', 'imagePath': 'assets/images/monitor.jpg'},
+      {'name': 'Headsets', 'imagePath': 'assets/images/headset.jpg'},
+      {'name': 'Cadeiras', 'imagePath': 'assets/images/cadeira.jpg'},
+      {'name': 'GPU', 'imagePath': 'assets/images/gpu.jpg'},
+      {'name': 'PC Gamer', 'imagePath': 'assets/images/pc_gamer.jpg'},
+      {'name': 'RPG', 'imagePath': 'assets/images/rpg.jpg'},
+      {'name': 'Decoração', 'imagePath': 'assets/images/vaso_planta.jpg'},
+      {'name': 'Vestiário', 'imagePath': 'assets/images/vestiario.jpg'},
+    ];
+
     return Column(
       children: [
         _buildSectionHeader('CATEGORIAS', onViewAllPressed: () {
-          // Lógica para visualizar todas as categorias
+          _navigateToAllCategories(context);
         }),
         const SizedBox(height: 10),
         SizedBox(
           height: 100,
-          child: StreamBuilder<QuerySnapshot>(
-            stream: _getFilteredCategoriesStream(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              var categories = snapshot.data!.docs;
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  var category = categories[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            category[
-                                'imagePath'], // Certifique-se de que o campo está correto
-                            fit: BoxFit.cover,
-                            height: 70,
-                            width: 70,
-                          ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              var category = categories[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: () {
+                    _navigateToCategoryAuctions(context, category['name']!);
+                  },
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          category['imagePath']!,
+                          fit: BoxFit.cover,
+                          height: 70,
+                          width: 120,
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          category['name'],
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        category['name']!,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -323,7 +434,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPopularSection() {
     return Column(
       children: [
-        _buildSectionHeader('EM ALTA'),
+        _buildSectionHeader('EM ALTA', onViewAllPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AllAuctionsScreen(),
+            ),
+          );
+        }),
         const SizedBox(height: 10),
         StreamBuilder<QuerySnapshot>(
           stream: _getFilteredItemsStream(),
@@ -332,11 +450,15 @@ class _HomeScreenState extends State<HomeScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             var items = snapshot.data!.docs;
+            if (items.isEmpty) {
+              return const Center(
+                  child: Text('Nenhum leilão em alta no momento.'));
+            }
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
                 childAspectRatio: 0.75,
@@ -359,21 +481,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          item[
-                              'imagePath'], // Certifique-se de que o campo está correto
+                        child: Image.network(
+                          item['imagePath'],
                           fit: BoxFit.cover,
-                          height: 100,
+                          height: MediaQuery.of(context).size.width > 600
+                              ? 150
+                              : 100,
                           width: double.infinity,
                         ),
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        item['name'],
+                        item['productName'],
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'Lance Inicial\nR\$ ${item['price']}',
+                        'Lance Inicial\nR\$ ${item['startingBid']}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -402,23 +525,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Stream<QuerySnapshot> _getFilteredCategoriesStream() {
-    return FirebaseFirestore.instance
-        .collection('categorias')
-        .snapshots(); // Filtros de categorias podem ser aplicados aqui, se necessário
-  }
-
   Stream<QuerySnapshot> _getFilteredItemsStream() {
     Query<Map<String, dynamic>> query =
-        FirebaseFirestore.instance.collection('em_alta');
+        FirebaseFirestore.instance.collectionGroup('auctions');
 
-    if (_selectedCategory != null) {
-      query = query.where('category', isEqualTo: _selectedCategory);
-    }
-
-    query =
-        query.where('price', isGreaterThanOrEqualTo: _selectedPriceRange.start);
-    query = query.where('price', isLessThanOrEqualTo: _selectedPriceRange.end);
+    query = query
+        .where('startingBid', isGreaterThanOrEqualTo: 0)
+        .orderBy('createdAt', descending: true);
 
     return query.snapshots();
   }
@@ -426,5 +539,248 @@ class _HomeScreenState extends State<HomeScreen> {
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacementNamed(context, '/login');
+  }
+}
+
+class AllCategoriesScreen extends StatelessWidget {
+  const AllCategoriesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = [
+      {'name': 'Tecnologia', 'imagePath': 'assets/images/tecnologia.png'},
+      {'name': 'Jogos', 'imagePath': 'assets/images/game.png'},
+      {'name': 'Monitores', 'imagePath': 'assets/images/monitor.jpg'},
+      {'name': 'Headsets', 'imagePath': 'assets/images/headset.jpg'},
+      {'name': 'Cadeiras', 'imagePath': 'assets/images/cadeira.jpg'},
+      {'name': 'GPU', 'imagePath': 'assets/images/gpu.jpg'},
+      {'name': 'PC Gamer', 'imagePath': 'assets/images/pc_gamer.jpg'},
+      {'name': 'RPG', 'imagePath': 'assets/images/rpg.jpg'},
+      {'name': 'Decoração', 'imagePath': 'assets/images/vaso_planta.jpg'},
+      {'name': 'Vestiário', 'imagePath': 'assets/images/vestiario.jpg'},
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Todas as Categorias'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16.0),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          var category = categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoryAuctionsScreen(
+                    category: category['name'] ?? 'Nome Desconhecido',
+                  ),
+                ),
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    category['imagePath']!,
+                    fit: BoxFit.cover,
+                    height: MediaQuery.of(context).size.width > 600 ? 150 : 100,
+                    width: double.infinity,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  category['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CategoryAuctionsScreen extends StatelessWidget {
+  final String category;
+
+  const CategoryAuctionsScreen({required this.category, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Leilões em $category'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collectionGroup('auctions')
+            .where('category', isEqualTo: category)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          var items = snapshot.data!.docs;
+          if (items.isEmpty) {
+            return const Center(child: Text('Nenhum leilão encontrado.'));
+          }
+          return GridView.builder(
+            padding: const EdgeInsets.all(16.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              var item = items[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AuctionDetailScreen(itemId: item.id),
+                    ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        item['imagePath'],
+                        fit: BoxFit.cover,
+                        height:
+                            MediaQuery.of(context).size.width > 600 ? 150 : 100,
+                        width: double.infinity,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      item['productName'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Lance Inicial\nR\$ ${item['startingBid']}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AllAuctionsScreen extends StatelessWidget {
+  const AllAuctionsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Todos os Leilões'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream:
+            FirebaseFirestore.instance.collectionGroup('auctions').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          var items = snapshot.data!.docs;
+          if (items.isEmpty) {
+            return const Center(child: Text('Nenhum leilão em andamento.'));
+          }
+          return GridView.builder(
+            padding: const EdgeInsets.all(16.0),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              var item = items[index];
+              var imageUrl =
+                  item['imagePath'] ?? 'assets/images/default_image.jpg';
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AuctionDetailScreen(itemId: item.id),
+                    ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: imageUrl.startsWith('http')
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              height: MediaQuery.of(context).size.width > 600
+                                  ? 150
+                                  : 100,
+                              width: double.infinity,
+                            )
+                          : Image.asset(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              height: MediaQuery.of(context).size.width > 600
+                                  ? 150
+                                  : 100,
+                              width: double.infinity,
+                            ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      item['productName'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Lance Inicial\nR\$ ${item['startingBid']}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

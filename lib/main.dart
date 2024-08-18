@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MainWrapper extends StatefulWidget {
-  const MainWrapper({Key? key}) : super(key: key);
+  const MainWrapper({super.key});
 
   @override
   _MainWrapperState createState() => _MainWrapperState();

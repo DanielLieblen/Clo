@@ -74,9 +74,6 @@ flutter:
   assets:
     - assets/logo.png
     - assets/logo2.png
-    - assets/images/tecnologia.png
-    - assets/images/rpg.jpg
-    - assets/images/vestiario.jpg
     - assets/icons/Compass.png
     - assets/icons/Bell.png
     - assets/icons/equalizer.png
@@ -92,10 +89,13 @@ flutter:
     - assets/icons/categories_icon.png
     - assets/icons/notifications_icon.png
     - assets/images/mouse.jpg
+    - assets/images/vestiario.jpg
+    - assets/images/tecnologia.png
     - assets/images/teclado.jpg
     - assets/images/monitor.jpg
     - assets/images/headset.jpg
     - assets/images/cadeira.jpg
+    - assets/images/game.png
     - assets/images/gpu.jpg
     - assets/images/pc_gamer.jpg
     - assets/images/rpg.jpg

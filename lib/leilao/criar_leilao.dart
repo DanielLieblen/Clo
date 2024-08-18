@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clo/leilao/leilao.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,10 +21,34 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _startingBidController = TextEditingController();
   String? _selectedCategory;
+  String? _selectedSubCategory;
   String? _selectedDuration;
-  String? _sellerName; // Nome do vendedor (usuário)
-  File? _imageFile; // Para armazenar a imagem selecionada
-  bool _isUploading = false; // Para controlar o estado de upload
+  String? _sellerName;
+  File? _imageFile;
+  bool _isUploading = false;
+
+  // Definindo categorias e subcategorias
+  final Map<String, List<String>> categories = {
+    'Eletrodoméstico': [],
+    'Eletrônicos': [],
+    'Móvel': [],
+    'Vestiário': [],
+    'Calçados': [],
+    'Joias': [],
+    'Relógios': [],
+    'Tecnologia': [
+      'Jogos - RPG',
+      'Jogos - Computador',
+      'Jogos - Console',
+      'Periféricos - Monitores',
+      'Periféricos - Mouse',
+      'Periféricos - Teclado',
+      'Periféricos - Headset',
+      'Cadeiras',
+      'GPUs',
+      'Computadores',
+    ],
+  };
 
   @override
   void initState() {
@@ -41,8 +66,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
             .get();
         if (userDoc.exists) {
           setState(() {
-            _sellerName =
-                "${userDoc['first_name']} ${userDoc['last_name']}"; // Assumindo que os campos 'nome' e 'sobrenome' existem
+            _sellerName = "${userDoc['first_name']} ${userDoc['last_name']}";
           });
         } else {
           print('Documento do usuário não encontrado.');
@@ -85,12 +109,11 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
                       labelText: 'Vendedor',
                       border: OutlineInputBorder(),
                     ),
-                    readOnly: true, // Campo somente leitura, não editável
+                    readOnly: true,
                   ),
             const SizedBox(height: 16),
             TextFormField(
-              controller:
-                  _productNameController, // Campo para o nome do produto
+              controller: _productNameController,
               decoration: const InputDecoration(
                 labelText: 'Nome do Produto',
                 border: OutlineInputBorder(),
@@ -102,46 +125,42 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
                 labelText: 'Categoria',
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Eletrodomestico',
-                  child: Text('Eletrodoméstico'),
-                ),
-                DropdownMenuItem(
-                  value: 'Eletronicos',
-                  child: Text('Eletrônicos'),
-                ),
-                DropdownMenuItem(
-                  value: 'Movel',
-                  child: Text('Móvel'),
-                ),
-                DropdownMenuItem(
-                  value: 'Vestimenta',
-                  child: Text('Vestimenta'),
-                ),
-                DropdownMenuItem(
-                  value: 'Calçados',
-                  child: Text('Calçados'),
-                ),
-                DropdownMenuItem(
-                  value: 'Joias',
-                  child: Text('Joias'),
-                ),
-                DropdownMenuItem(
-                  value: 'Relógios',
-                  child: Text('Relógios'),
-                ),
-                DropdownMenuItem(
-                  value: 'Tecnologia',
-                  child: Text('Tecnologia'),
-                ),
-              ],
+              items: categories.keys.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedCategory = value;
+                  _selectedSubCategory =
+                      null; // Resetar subcategoria ao mudar a categoria
                 });
               },
+              value: _selectedCategory,
             ),
+            const SizedBox(height: 16),
+            if (_selectedCategory != null &&
+                categories[_selectedCategory]!.isNotEmpty)
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Subcategoria',
+                  border: OutlineInputBorder(),
+                ),
+                items: categories[_selectedCategory]!.map((String subCategory) {
+                  return DropdownMenuItem<String>(
+                    value: subCategory,
+                    child: Text(subCategory),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSubCategory = value;
+                  });
+                },
+                value: _selectedSubCategory,
+              ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
@@ -298,7 +317,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
         return;
       }
 
-      // Upload da imagem para o Firebase Storage
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('auction_images')
@@ -309,7 +327,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       final snapshot = await uploadTask.whenComplete(() {});
       final imageUrl = await snapshot.ref.getDownloadURL();
 
-      // Calculando o tempo final do leilão
       final DateTime now = DateTime.now();
       late DateTime endTime;
       switch (_selectedDuration) {
@@ -335,7 +352,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           endTime = now.add(const Duration(days: 1));
       }
 
-      // Criar o documento do leilão no Firestore
       final auctionDoc = FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -343,24 +359,32 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           .doc();
 
       await auctionDoc.set({
-        'productName': _productNameController.text, // Nome do produto
+        'productName': _productNameController.text,
         'seller': _sellerName,
         'description': _descriptionController.text,
         'category': _selectedCategory,
+        'subCategory': _selectedSubCategory,
         'startingBid': double.parse(_startingBidController.text),
-        'currentBid': double.parse(
-            _startingBidController.text), // Inicialmente igual ao lance mínimo
-        'imagePath': imageUrl, // Caminho da imagem no Firebase Storage
+        'currentBid': double.parse(_startingBidController.text),
+        'imagePath': imageUrl,
         'views': 0,
         'createdAt': now,
-        'endTime': endTime,
+        'endTime': endTime, // Aqui o 'endTime' é adicionado ao documento
         'timeRemaining': DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime),
-        'bids': [], // Lista de lances
-        'winner': null, // Inicialmente, não há vencedor
+        'bids': [],
+        'winner': null,
       });
 
-      print('Leilão criado com sucesso');
-      Navigator.pop(context);
+      // Imprimir o ID do documento criado
+      print('Leilão criado com sucesso. ID: ${auctionDoc.id}');
+
+      // Navegar para a tela de detalhes do leilão usando o ID criado
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AuctionDetailScreen(itemId: auctionDoc.id),
+        ),
+      );
     } catch (e) {
       print('Erro ao criar leilão: $e');
     } finally {
@@ -370,7 +394,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
     }
   }
 
-  // Função para verificar se o leilão terminou e determinar o vencedor
   Future<void> checkAuctionEnd() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {

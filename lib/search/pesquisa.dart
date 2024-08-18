@@ -185,7 +185,7 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
         children: [
           Stack(
             children: [
-              Image.asset(
+              Image.network(
                 item['imagePath'],
                 width: double.infinity,
                 height: 180,
@@ -213,13 +213,13 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'],
+                  item['productName'],
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'R\$ ${item['price']}',
+                  'R\$ ${item['startingBid']}',
                   style: const TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
@@ -251,15 +251,15 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
 
   Stream<QuerySnapshot> _getFilteredItemsStream() {
     Query<Map<String, dynamic>> query =
-        FirebaseFirestore.instance.collection('em_alta');
+        FirebaseFirestore.instance.collectionGroup('auctions');
 
     if (widget.selectedCategory != null) {
       query = query.where('category', isEqualTo: widget.selectedCategory);
     }
 
-    query = query.where('price',
+    query = query.where('startingBid',
         isGreaterThanOrEqualTo: widget.selectedPriceRange.start);
-    query = query.where('price',
+    query = query.where('startingBid',
         isLessThanOrEqualTo: widget.selectedPriceRange.end);
 
     return query.snapshots();

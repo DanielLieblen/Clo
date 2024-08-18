@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HistoricoScreen extends StatelessWidget {
-  const HistoricoScreen({Key? key}) : super(key: key);
+  const HistoricoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class PerfilAvancadoScreen extends StatelessWidget {
-  const PerfilAvancadoScreen({Key? key}) : super(key: key);
+  const PerfilAvancadoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

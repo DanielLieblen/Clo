@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class InformacoesPessoaisScreen extends StatefulWidget {
-  const InformacoesPessoaisScreen({Key? key}) : super(key: key);
+  const InformacoesPessoaisScreen({super.key});
 
   @override
   _InformacoesPessoaisScreenState createState() =>
@@ -97,13 +97,13 @@ class _InformacoesPessoaisScreenState extends State<InformacoesPessoaisScreen> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveUserData,
-              child: const Text('Salvar'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              child: const Text('Salvar'),
             ),
           ],
         ),

@@ -6,7 +6,7 @@ import 'editar_perfil.dart';
 import 'perfil_avancado.dart'; // Importando a página de Perfil Avançado
 
 class PerfilScreen extends StatefulWidget {
-  const PerfilScreen({Key? key}) : super(key: key);
+  const PerfilScreen({super.key});
 
   @override
   _PerfilScreenState createState() => _PerfilScreenState();
@@ -46,7 +46,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         } else {
           // Documento não encontrado
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Dados do usuário não encontrados.')),
+            const SnackBar(content: Text('Dados do usuário não encontrados.')),
           );
         }
       } catch (e) {
