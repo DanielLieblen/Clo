@@ -6,6 +6,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -163,21 +164,34 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
               ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Descrição do Produto',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
               controller: _startingBidController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Lance Mínimo',
+                prefixText: 'R\$ ',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  String newText = newValue.text.replaceAll(',', '.');
+                  return newValue.copyWith(
+                    text: newText,
+                    selection: TextSelection.collapsed(offset: newText.length),
+                  );
+                }),
+              ],
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  final newValue = value.replaceAll(',', '.');
+                  _startingBidController.value =
+                      _startingBidController.value.copyWith(
+                    text: newValue,
+                    selection: TextSelection.collapsed(offset: newValue.length),
+                  );
+                }
+              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -352,11 +366,8 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           endTime = now.add(const Duration(days: 1));
       }
 
-      final auctionDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('auctions')
-          .doc();
+      final auctionDoc =
+          FirebaseFirestore.instance.collection('auctions').doc();
 
       await auctionDoc.set({
         'productName': _productNameController.text,
@@ -364,14 +375,17 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
         'description': _descriptionController.text,
         'category': _selectedCategory,
         'subCategory': _selectedSubCategory,
-        'startingBid': double.parse(_startingBidController.text),
-        'currentBid': double.parse(_startingBidController.text),
+        'startingBid': double.parse(_startingBidController.text
+            .replaceAll(',', '.')), // Convertendo para formato numérico
+        'currentBid': double.parse(_startingBidController.text
+            .replaceAll(',', '.')), // Convertendo para formato numérico
         'imagePath': imageUrl,
         'views': 0,
         'createdAt': now,
         'endTime': endTime, // Aqui o 'endTime' é adicionado ao documento
         'timeRemaining': DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime),
-        'bids': [],
+        'bids': [], // Inicializa a lista de lances como vazia
+        'participants': [], // Inicializa a lista de participantes como vazia
         'winner': null,
       });
 
@@ -391,34 +405,6 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       setState(() {
         _isUploading = false;
       });
-    }
-  }
-
-  Future<void> checkAuctionEnd() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      print('Erro: Usuário não autenticado');
-      return;
-    }
-
-    final auctions = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('auctions')
-        .where('endTime', isLessThanOrEqualTo: DateTime.now())
-        .where('winner', isEqualTo: null)
-        .get();
-
-    for (var auction in auctions.docs) {
-      final bids = auction['bids'] as List<dynamic>;
-      if (bids.isNotEmpty) {
-        bids.sort((a, b) => b['amount'].compareTo(a['amount']));
-        final winner = bids.first['bidder'];
-        await auction.reference.update({'winner': winner});
-        print('Vencedor do leilão ${auction.id}: $winner');
-      } else {
-        print('Leilão ${auction.id} terminou sem lances.');
-      }
     }
   }
 }
