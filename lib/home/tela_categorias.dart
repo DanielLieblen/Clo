@@ -1,3 +1,4 @@
+import 'package:clo/search/pesquisa.dart'; // Importe a tela de pesquisa
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -27,16 +28,36 @@ class CategoriasScreen extends StatelessWidget {
             ),
             children: [
               buildCategoryCard(
-                  'Tecnologia', 'assets/images/tecnologia.png', screenWidth),
+                'Tecnologia',
+                'assets/images/tecnologia.png',
+                screenWidth,
+                context,
+                'Tecnologia', // Categoria a ser filtrada
+              ),
               const SizedBox(height: 16),
               buildCategoryCard(
-                  'Jogos e Consoles', 'assets/images/game.png', screenWidth),
+                'Jogos e Consoles',
+                'assets/images/game.png',
+                screenWidth,
+                context,
+                'Jogos e Consoles', // Categoria a ser filtrada
+              ),
               const SizedBox(height: 16),
               buildCategoryCard(
-                  'RPG e Tabuleiro', 'assets/images/rpg.png', screenWidth),
+                'RPG e Tabuleiro',
+                'assets/images/rpg.png',
+                screenWidth,
+                context,
+                'RPG e Tabuleiro', // Categoria a ser filtrada
+              ),
               const SizedBox(height: 16),
               buildCategoryCard(
-                  'Vestiário', 'assets/images/vestiario.jpg', screenWidth),
+                'Vestiário',
+                'assets/images/vestiario.jpg',
+                screenWidth,
+                context,
+                'Vestiário', // Categoria a ser filtrada
+              ),
               // Adicione mais categorias conforme necessário
             ],
           );
@@ -95,36 +116,50 @@ class CategoriasScreen extends StatelessWidget {
     );
   }
 
-  Widget buildCategoryCard(String title, String imagePath, double screenWidth) {
+  Widget buildCategoryCard(String title, String imagePath, double screenWidth,
+      BuildContext context, String category) {
     final cardHeight = screenWidth > 600 ? 200.0 : 180.0;
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Image.asset(
-            imagePath,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: cardHeight,
-          ),
-          Container(
-            alignment: Alignment.center,
-            color: Colors.black54,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-                fontSize: screenWidth > 600 ? 20 : 18,
-                fontWeight: FontWeight.bold,
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PesquisaScreen(
+              selectedCategory: category,
+              selectedPriceRange: const RangeValues(0, 10000),
             ),
           ),
-        ],
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: cardHeight,
+            ),
+            Container(
+              alignment: Alignment.center,
+              color: Colors.black54,
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Poppins',
+                  fontSize: screenWidth > 600 ? 20 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

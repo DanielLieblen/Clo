@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -185,11 +186,30 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
         children: [
           Stack(
             children: [
-              Image.network(
-                item['imagePath'],
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
+              FutureBuilder<String>(
+                future: _getImageUrl(item[
+                    'imagePath']), // Supondo que 'imagePath' seja o caminho no Firebase Storage
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (snapshot.hasError || !snapshot.hasData) {
+                    return const Image(
+                      image: NetworkImage('URL_PADRÃO_SE_HOUVER_ERRO'),
+                      width: double.infinity,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    );
+                  } else {
+                    return Image.network(
+                      snapshot.data!,
+                      width: double.infinity,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    );
+                  }
+                },
               ),
               if (item['isNew'] == true)
                 Positioned(
@@ -247,6 +267,17 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
         ],
       ),
     );
+  }
+
+  Future<String> _getImageUrl(String path) async {
+    try {
+      final ref = FirebaseStorage.instance.ref().child(path);
+      String url = await ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print("Erro ao obter a URL da imagem: $e");
+      return 'URL_PADRÃO_SE_HOUVER_ERRO'; // Retorne uma URL padrão caso ocorra um erro
+    }
   }
 
   Stream<QuerySnapshot> _getFilteredItemsStream() {

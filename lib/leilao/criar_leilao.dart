@@ -25,6 +25,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
   String? _selectedSubCategory;
   String? _selectedDuration;
   String? _sellerName;
+  String? _sellerId;
   File? _imageFile;
   bool _isUploading = false;
 
@@ -331,6 +332,9 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
         return;
       }
 
+      // Obter o ID do vendedor (usuário atual)
+      final sellerId = user.uid;
+
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('auction_images')
@@ -372,6 +376,7 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
       await auctionDoc.set({
         'productName': _productNameController.text,
         'seller': _sellerName,
+        'sellerId': sellerId, // Adiciona o ID do vendedor ao documento
         'description': _descriptionController.text,
         'category': _selectedCategory,
         'subCategory': _selectedSubCategory,

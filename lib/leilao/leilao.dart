@@ -27,7 +27,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
 
   final TextEditingController _customBidController = TextEditingController();
   DateTime? endTime;
-  List<String> liveParticipants = []; // Lista de participantes ao vivo
+  List<String> liveParticipants = [];
+
+  // Adicione o ValueNotifier aqui:
+  ValueNotifier<int> _remainingTime = ValueNotifier<int>(0);
 
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -41,9 +44,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
     _getCurrentUserId();
     _initializeAuctionStream();
     _initializeNotifications();
-    _startClockTimer(); // Inicia o timer do relógio
-    _checkIfSeller(); // Verifica se o usuário é o vendedor
-    // Verifica se o usuário é o vendedor
+    _startClockTimer();
+    _checkIfSeller();
     _checkIfSeller().then((isSeller) {
       setState(() {
         _isSeller = isSeller;
@@ -53,7 +55,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
 
   void _startClockTimer() {
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {});
+      if (endTime != null) {
+        final remaining = endTime!.difference(DateTime.now()).inSeconds;
+        _remainingTime.value = remaining > 0 ? remaining : 0;
+      }
     });
   }
 
@@ -62,6 +67,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
     _auctionTimer?.cancel();
     _countdownTimer?.cancel();
     _clockTimer?.cancel();
+    _remainingTime.dispose(); // Libere o ValueNotifier aqui
     _customBidController.dispose();
     super.dispose();
   }
@@ -71,9 +77,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
         AndroidInitializationSettings('app_icon');
 
     const InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
@@ -107,7 +111,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
         currentUserId = user.uid;
       });
 
-      await _getUserName(currentUserId!); // Carrega o nome do usuário
+      await _getUserName(currentUserId!);
       print('Current User ID: $currentUserId');
     }
   }
@@ -243,7 +247,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
     );
   }
 
-  String _formatTimeRemaining() {
+  String _formatTimeRemaining(int RemainingTime) {
     if (endTime == null) return "00:00:00";
     final Duration remaining = endTime!.difference(DateTime.now());
     if (remaining.isNegative) {
@@ -275,14 +279,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               _isSeller == null) {
-            // Mostra o indicador de carregamento se os dados ainda estiverem carregando
             return const Center(
               child: CircularProgressIndicator(),
             );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -358,9 +357,42 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
                       const SizedBox(height: 5),
                       Row(
                         children: [
-                          const CircleAvatar(
-                            backgroundImage:
-                                AssetImage('assets/images/default_profile.jpg'),
+                          FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(auctionData['sellerId'])
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                      'assets/images/default_profile.jpg'),
+                                );
+                              }
+
+                              if (snapshot.hasError ||
+                                  !snapshot.hasData ||
+                                  snapshot.data == null) {
+                                return const CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                      'assets/images/default_profile.jpg'),
+                                );
+                              }
+
+                              final userDoc = snapshot.data!;
+                              final profileImageUrl =
+                                  userDoc['profileImageUrl'] ??
+                                      'assets/images/default_profile.jpg';
+
+                              return CircleAvatar(
+                                backgroundImage:
+                                    profileImageUrl.startsWith('http')
+                                        ? NetworkImage(profileImageUrl)
+                                        : AssetImage(profileImageUrl)
+                                            as ImageProvider,
+                              );
+                            },
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -388,29 +420,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
                   const SizedBox(height: 20),
 
                   // Contador de tempo restante
-                  if (!isEnded)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: AssetImage(
-                                  'assets/images/default_profile.jpg'),
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              'em live',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          _formatTimeRemaining(),
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
+                  if (!isEnded) _buildRemainingTime(),
+
                   if (isEnded)
                     const Text(
                       'Leilão Encerrado',
@@ -436,7 +447,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
                   const SizedBox(height: 20),
 
                   // Participantes ao vivo
-                  _buildLiveParticipants(liveParticipants),
+                  if (!isEnded) _buildLiveParticipants(liveParticipants),
 
                   const SizedBox(height: 20),
 
@@ -460,23 +471,130 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
     );
   }
 
+  Widget _buildRemainingTime() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Row(
+          children: [
+            CircleAvatar(
+              backgroundImage: AssetImage('assets/images/default_profile.jpg'),
+            ),
+            SizedBox(width: 10),
+            Text(
+              'ao vivo',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        ValueListenableBuilder<int>(
+          valueListenable: _remainingTime,
+          builder: (context, remainingTime, child) {
+            return Text(
+              _formatTimeRemaining(remainingTime),
+              style: const TextStyle(color: Colors.red),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildBidList(List<dynamic> bids) {
     if (bids == null || bids.isEmpty) {
       return const Text('Nenhum lance até o momento.');
     }
+
+    // Ordena os lances em ordem decrescente para exibir o maior lance primeiro
+    bids.sort((a, b) => b['bidAmount'].compareTo(a['bidAmount']));
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: bids.length,
       itemBuilder: (context, index) {
         final bid = bids[index];
-        return ListTile(
-          leading: const CircleAvatar(
-            backgroundImage: AssetImage('assets/images/default_profile.jpg'),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(bid['userId'])
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircleAvatar(
+                      backgroundImage:
+                          AssetImage('assets/images/default_profile.jpg'),
+                    );
+                  }
+
+                  if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data == null) {
+                    return const CircleAvatar(
+                      backgroundImage:
+                          AssetImage('assets/images/default_profile.jpg'),
+                    );
+                  }
+
+                  final userDoc = snapshot.data!;
+                  final profileImageUrl = userDoc['profileImageUrl'] ??
+                      'assets/images/default_profile.jpg';
+
+                  return CircleAvatar(
+                    backgroundImage: profileImageUrl.startsWith('http')
+                        ? NetworkImage(profileImageUrl)
+                        : AssetImage(profileImageUrl) as ImageProvider,
+                  );
+                },
+              ),
+              const SizedBox(width: 10), // Espaço entre o avatar e o texto
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(bid['userId'])
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Text('Carregando...');
+                        }
+                        if (snapshot.hasError ||
+                            !snapshot.hasData ||
+                            snapshot.data == null) {
+                          return const Text('Usuário');
+                        }
+                        final userDoc = snapshot.data!;
+                        final userName = userDoc['first_name'] ?? 'Usuário';
+                        return Text(
+                          userName,
+                          overflow:
+                              TextOverflow.ellipsis, // Evita estouro de texto
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        );
+                      },
+                    ),
+                    Text(
+                      'R\$ ${bid['bidAmount'].toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    Text(
+                      _formatTimeSince(bid['timestamp']),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          title: Text(currentUserName ?? 'Usuário'),
-          subtitle: Text('R\$ ${bid['bidAmount'].toStringAsFixed(2)}'),
-          trailing: Text(_formatTimeSince(bid['timestamp'])),
         );
       },
     );
@@ -500,49 +618,46 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        if (participants.isEmpty)
-          const Text('Nenhum participante ao vivo no momento.'),
-        if (participants.isNotEmpty)
-          Wrap(
-            children: participants.map((userId) {
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(userId)
-                    .get(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircleAvatar(
-                      backgroundImage:
-                          AssetImage('assets/images/default_profile.jpg'),
-                    );
-                  }
-
-                  if (snapshot.hasError ||
-                      !snapshot.hasData ||
-                      snapshot.data == null) {
-                    return const CircleAvatar(
-                      backgroundImage:
-                          AssetImage('assets/images/default_profile.jpg'),
-                    );
-                  }
-
-                  final userDoc = snapshot.data!;
-                  final profileImageUrl = userDoc['profileImageUrl'] ??
-                      'assets/images/default_profile.jpg';
-
-                  return Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: CircleAvatar(
-                      backgroundImage: profileImageUrl.startsWith('http')
-                          ? NetworkImage(profileImageUrl)
-                          : AssetImage(profileImageUrl) as ImageProvider,
-                    ),
+        Wrap(
+          children: participants.map((userId) {
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircleAvatar(
+                    backgroundImage:
+                        AssetImage('assets/images/default_profile.jpg'),
                   );
-                },
-              );
-            }).toList(),
-          ),
+                }
+
+                if (snapshot.hasError ||
+                    !snapshot.hasData ||
+                    snapshot.data == null) {
+                  return const CircleAvatar(
+                    backgroundImage:
+                        AssetImage('assets/images/default_profile.jpg'),
+                  );
+                }
+
+                final userDoc = snapshot.data!;
+                final profileImageUrl = userDoc['profileImageUrl'] ??
+                    'assets/images/default_profile.jpg';
+
+                return Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: CircleAvatar(
+                    backgroundImage: profileImageUrl.startsWith('http')
+                        ? NetworkImage(profileImageUrl)
+                        : AssetImage(profileImageUrl) as ImageProvider,
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
       ],
     );
   }
@@ -698,7 +813,6 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
     }
   }
 
-  // Getter para retornar o vendedor do leilão
   Future<String?> get sellerId async {
     if (_sellerId != null) {
       return _sellerId;
@@ -723,9 +837,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
   }
 
   Widget _buildBidButton(String label, double? bidAmount) {
-    // Verifica se já temos a informação se é vendedor
     if (_isSeller == null) {
-      return const CircularProgressIndicator(); // Ou outro indicador de carregamento
+      return const CircularProgressIndicator();
     }
 
     return Expanded(
@@ -799,17 +912,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
       if (auctionData.exists) {
         final auctionDetails = auctionData.data() as Map<String, dynamic>;
         final sellerId = auctionDetails['sellerId'];
-        // Obtém o lance atual, ou 0.0 se não existir
         final currentBid = auctionDetails['currentBid'] as double? ?? 0.0;
 
-        // Prints para debug
         print('currentUserId: $currentUserId');
         print('sellerId: $sellerId');
         print('currentBid: $currentBid');
 
-        // Verificar se o vendedor está tentando dar um lance
         if (currentUserId == sellerId) {
-          // Exibir uma mensagem de erro
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Você não pode dar lances no seu próprio leilão.'),
@@ -818,9 +927,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
           return;
         }
 
-        // Verificar se o lance é menor que o maior lance atual
         if (bidAmount <= currentBid) {
-          // Exibir uma mensagem de erro
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Seu lance deve ser maior que o lance atual.'),
@@ -835,13 +942,11 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
           'timestamp': Timestamp.now(),
         };
 
-        // Atualizar o lance no Firestore
         await docRef.update({
           'currentBid': bidAmount,
           'bids': FieldValue.arrayUnion([bidData]),
         });
 
-        // Exibir confirmação de lance
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Lance feito com sucesso!'),
