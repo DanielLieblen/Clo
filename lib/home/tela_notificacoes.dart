@@ -1,4 +1,6 @@
-import 'package:clo/leilao/criar_leilao.dart';
+import 'package:clo/home/tela_home.dart';
+import 'package:clo/leilao/criar_leilao.dart'; // Certifique-se de importar a tela de criação
+import 'package:clo/profile/perfil.dart';
 import 'package:clo/search/explorar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,28 +15,48 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  int _selectedIndex = 3;
+  int _selectedIndex = 2;
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) {
+      // Já estamos na tela, não faça nada
+      return;
+    }
+
+    // Atualize o estado antes de navegar
     setState(() {
       _selectedIndex = index;
     });
 
-    if (_selectedIndex == 0) {
-      Navigator.pushNamed(context, '/home');
-    } else if (_selectedIndex == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ExplorarScreen()),
-      );
-    } else if (_selectedIndex == 2) {
-      // Lógica para criar novo item
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const CreateAuctionScreen()),
-      );
-    } else if (_selectedIndex == 3) {
-      Navigator.pushNamed(context, '/perfil');
+    // Agora, realize a navegação conforme o índice selecionado
+    switch (_selectedIndex) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ExplorarScreen()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PerfilScreen()),
+        );
+        break;
+      default:
+        // Se acontecer algo inesperado, apenas mantenha a tela atual
+        break;
     }
   }
 
@@ -91,9 +113,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     onDismissed: (direction) {
                       _deleteNotification(notification.id);
                     },
-                    direction: DismissDirection.endToStart,
+                    direction:
+                        DismissDirection.startToEnd, // Swipe para a direita
                     background: Container(
-                      alignment: Alignment.centerRight,
+                      alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       color: Colors.red,
                       child: const Icon(
@@ -114,6 +137,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const CreateAuctionScreen()),
+          );
+        },
+        backgroundColor: const Color(0xFF4A3497),
+        shape: const CircleBorder(),
+        elevation: 6.0,
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
@@ -137,17 +174,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               label: 'Explorar',
             ),
             BottomNavigationBarItem(
-              icon: FaIcon(
-                FontAwesomeIcons.plus,
-                size: 20,
-              ),
-              label: 'Criar',
+              icon: SizedBox
+                  .shrink(), // Mantém o espaço para o botão central, mas sem ícone
+              label: '', // Rótulo vazio para não criar problemas de espaçamento
             ),
             BottomNavigationBarItem(
               icon: FaIcon(
                 FontAwesomeIcons.bell,
                 size: 20,
-                color: Color(0xFF4A3497),
               ),
               label: 'Notificações',
             ),

@@ -16,13 +16,19 @@ class PerfilAvancadoScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil Avançado'),
+        title: const Text(
+          'Perfil Avançado',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,12 +41,16 @@ class PerfilAvancadoScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               user?.displayName ?? 'Usuário',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 30),
             _buildProfileOption(
               context,
-              icon: Icons.person,
+              icon: Icons.person_outline,
               title: 'Informação Pessoal',
               page: const InformacoesPessoaisScreen(),
             ),
@@ -52,24 +62,24 @@ class PerfilAvancadoScreen extends StatelessWidget {
             ),
             _buildProfileOption(
               context,
-              icon: Icons.settings,
+              icon: Icons.settings_outlined,
               title: 'Configurações',
               page: const SettingsScreen(),
             ),
             _buildProfileOption(
               context,
-              icon: Icons.payment,
+              icon: Icons.payment_outlined,
               title: 'Métodos De Pagamento',
               page: const MetodosPagamentoScreen(),
             ),
             _buildProfileOption(
               context,
-              icon: Icons.accessibility,
+              icon: Icons.accessibility_new_outlined,
               title: 'Acessibilidade',
               page: const AcessibilidadeScreen(),
             ),
             const Spacer(),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
@@ -78,13 +88,17 @@ class PerfilAvancadoScreen extends StatelessWidget {
                   (Route<dynamic> route) => false,
                 );
               },
+              icon: const Icon(Icons.logout),
+              label: const Text('Deslogar'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                foregroundColor: const Color(0xFF4A3497),
+                backgroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                side: const BorderSide(color: Color(0xFF4A3497)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Deslogar'),
             ),
           ],
         ),
@@ -95,9 +109,12 @@ class PerfilAvancadoScreen extends StatelessWidget {
   Widget _buildProfileOption(BuildContext context,
       {required IconData icon, required String title, required Widget page}) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.arrow_forward_ios),
+      leading: Icon(icon, color: const Color(0xFF4A3497)),
+      title: Text(
+        title,
+        style: const TextStyle(fontFamily: 'Poppins'),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
       onTap: () {
         Navigator.push(
           context,

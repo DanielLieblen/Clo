@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:clo/home/tela_notificacoes.dart';
 import 'package:clo/leilao/criar_leilao.dart';
 import 'package:clo/leilao/leilao.dart';
+import 'package:clo/profile/perfil.dart';
 import 'package:clo/search/explorar.dart';
 import 'package:clo/search/pesquisa.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -50,25 +51,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) {
+      // Não faça nada se o índice já estiver selecionado
+      return;
+    }
+
     setState(() {
       _selectedIndex = index;
     });
+
     if (_selectedIndex == 0) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else if (_selectedIndex == 1) {
-      // lógica para explorar
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ExplorarScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else if (_selectedIndex == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ExplorarScreen()),
       );
     } else if (_selectedIndex == 2) {
-      // lógica para notificações
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const NotificationsScreen()),
       );
     } else if (_selectedIndex == 3) {
-      Navigator.pushReplacementNamed(context, '/perfil');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const PerfilScreen()),
+      );
     }
   }
 
