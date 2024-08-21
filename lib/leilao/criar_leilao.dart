@@ -374,7 +374,9 @@ class _CreateAuctionScreenState extends State<CreateAuctionScreen> {
           FirebaseFirestore.instance.collection('auctions').doc();
 
       await auctionDoc.set({
-        'productName': _productNameController.text,
+        'productName': _productNameController.text
+            .trim()
+            .toLowerCase(), // Normaliza o nome do produto
         'seller': _sellerName,
         'sellerId': sellerId, // Adiciona o ID do vendedor ao documento
         'description': _descriptionController.text,

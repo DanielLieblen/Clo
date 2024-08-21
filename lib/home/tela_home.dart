@@ -1,8 +1,9 @@
 import 'dart:io';
 
+import 'package:clo/home/tela_notificacoes.dart';
 import 'package:clo/leilao/criar_leilao.dart';
 import 'package:clo/leilao/leilao.dart';
-import 'package:clo/profile/perfil.dart';
+import 'package:clo/search/explorar.dart';
 import 'package:clo/search/pesquisa.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -52,12 +53,22 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
-
-    if (_selectedIndex == 3) {
-      Navigator.push(
+    if (_selectedIndex == 0) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (_selectedIndex == 1) {
+      // lógica para explorar
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PerfilScreen()),
+        MaterialPageRoute(builder: (context) => ExplorarScreen()),
       );
+    } else if (_selectedIndex == 2) {
+      // lógica para notificações
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+      );
+    } else if (_selectedIndex == 3) {
+      Navigator.pushReplacementNamed(context, '/perfil');
     }
   }
 
@@ -228,11 +239,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToCategoryAuctions(BuildContext context, String category) {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CategoryAuctionsScreen(category: category),
-      ),
-    );
+        context,
+        MaterialPageRoute(
+          builder: (context) => PesquisaScreen(
+            selectedCategory: category,
+            selectedPriceRange: const RangeValues(0, 10000),
+          ),
+        ));
   }
 
   void _onSearchSubmitted(String query) {
@@ -240,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => PesquisaScreen(
-          selectedCategory: query.isNotEmpty ? query : null,
+          searchQuery: query,
           selectedPriceRange: _selectedPriceRange,
         ),
       ),

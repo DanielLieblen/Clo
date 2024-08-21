@@ -1,15 +1,20 @@
+import 'package:clo/home/tela_notificacoes.dart';
+import 'package:clo/leilao/leilao.dart';
+import 'package:clo/search/explorar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PesquisaScreen extends StatefulWidget {
-  final String? selectedCategory;
+  String? selectedCategory;
+  String? searchQuery;
   final RangeValues selectedPriceRange;
 
-  const PesquisaScreen({
+  PesquisaScreen({
     super.key,
     this.selectedCategory,
+    this.searchQuery,
     required this.selectedPriceRange,
   });
 
@@ -19,19 +24,39 @@ class PesquisaScreen extends StatefulWidget {
 
 class _PesquisaScreenState extends State<PesquisaScreen> {
   int _selectedIndex = 0;
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(text: widget.searchQuery);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    // Lógica para navegação com base no índice selecionado
     if (_selectedIndex == 0) {
       Navigator.pushReplacementNamed(context, '/home');
     } else if (_selectedIndex == 1) {
-      // Implementar lógica para explorar
+      // lógica para explorar
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ExplorarScreen()),
+      );
     } else if (_selectedIndex == 2) {
-      // Implementar lógica para notificações
+      // lógica para notificações
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationsScreen()),
+      );
     } else if (_selectedIndex == 3) {
       Navigator.pushReplacementNamed(context, '/perfil');
     }
@@ -106,15 +131,42 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
     );
   }
 
+  final FocusNode _searchFocusNode = FocusNode();
+
   Widget _buildSearchBar() {
     return TextField(
+      controller: _searchController,
+      focusNode: _searchFocusNode,
       decoration: InputDecoration(
         hintText: 'Buscar',
         prefixIcon: const Icon(Icons.search),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
+        suffixIcon: IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () {
+            _searchController.clear();
+            setState(() {
+              widget.searchQuery = '';
+              widget.selectedCategory = null;
+            });
+          },
+        ),
       ),
+      onChanged: (text) {
+        setState(() {
+          widget.searchQuery = text;
+          widget.selectedCategory = null;
+        });
+      },
+      onSubmitted: (text) {
+        setState(() {
+          widget.searchQuery = text;
+          widget.selectedCategory = null;
+        });
+        _searchFocusNode.unfocus();
+      },
     );
   }
 
@@ -124,19 +176,29 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
       child: Row(
         children: [
           _buildFilterButton('Todos', onTap: () {
-            // Redirecionar para todos os itens
+            setState(() {
+              widget.selectedCategory = null;
+            });
           }),
           _buildFilterButton('Recomendações', onTap: () {
-            // Redirecionar para recomendações
+            setState(() {
+              widget.selectedCategory = 'Recomendações';
+            });
           }),
           _buildFilterButton('Popular', onTap: () {
-            // Redirecionar para itens populares
+            setState(() {
+              widget.selectedCategory = 'Popular';
+            });
           }),
           _buildFilterButton('Grátis', onTap: () {
-            // Redirecionar para itens grátis
+            setState(() {
+              widget.selectedCategory = 'Grátis';
+            });
           }),
           _buildFilterButton('Lançamentos', onTap: () {
-            // Redirecionar para lançamentos
+            setState(() {
+              widget.selectedCategory = 'Lançamentos';
+            });
           }),
         ],
       ),
@@ -167,7 +229,18 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         var items = snapshot.data!.docs;
-        return ListView.builder(
+        if (items.isEmpty) {
+          return const Center(child: Text('Nenhum item encontrado.'));
+        }
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 0.75,
+          ),
           itemCount: items.length,
           itemBuilder: (context, index) {
             var item = items[index];
@@ -178,139 +251,77 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
     );
   }
 
+  // Função para obter a URL da imagem no Firebase Storage
+  Future<String> _getImageUrl(String imagePath) async {
+    final ref = FirebaseStorage.instance.ref().child(imagePath);
+    return await ref.getDownloadURL();
+  }
+
   Widget _buildItemCard(DocumentSnapshot item) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AuctionDetailScreen(itemId: item.id),
+          ),
+        );
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              FutureBuilder<String>(
-                future: _getImageUrl(item[
-                    'imagePath']), // Supondo que 'imagePath' seja o caminho no Firebase Storage
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (snapshot.hasError || !snapshot.hasData) {
-                    return const Image(
-                      image: NetworkImage('URL_PADRÃO_SE_HOUVER_ERRO'),
-                      width: double.infinity,
-                      height: 180,
-                      fit: BoxFit.cover,
-                    );
-                  } else {
-                    return Image.network(
-                      snapshot.data!,
-                      width: double.infinity,
-                      height: 180,
-                      fit: BoxFit.cover,
-                    );
-                  }
-                },
-              ),
-              if (item['isNew'] == true)
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    color: Colors.red,
-                    child: const Text(
-                      'Novo',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item['productName'],
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'R\$ ${item['startingBid']}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Redirecionar para a página de leilão correspondente
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LeilaoScreen(leilaoId: item.id),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A3497),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text('Dar Lance'),
-                ),
-              ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              item[
+                  'imagePath'], // Certifique-se de que este caminho esteja correto
+              fit: BoxFit.cover,
+              height: MediaQuery.of(context).size.width > 600 ? 150 : 100,
+              width: double.infinity,
             ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            item['productName'],
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            'Lance Inicial\nR\$ ${item['startingBid']}',
+            style: const TextStyle(color: Colors.grey),
           ),
         ],
       ),
     );
   }
 
-  Future<String> _getImageUrl(String path) async {
-    try {
-      final ref = FirebaseStorage.instance.ref().child(path);
-      String url = await ref.getDownloadURL();
-      return url;
-    } catch (e) {
-      print("Erro ao obter a URL da imagem: $e");
-      return 'URL_PADRÃO_SE_HOUVER_ERRO'; // Retorne uma URL padrão caso ocorra um erro
-    }
-  }
-
   Stream<QuerySnapshot> _getFilteredItemsStream() {
     Query<Map<String, dynamic>> query =
-        FirebaseFirestore.instance.collectionGroup('auctions');
+        FirebaseFirestore.instance.collection('auctions');
 
-    if (widget.selectedCategory != null) {
+    // Filtro de categoria
+    if (widget.selectedCategory != null &&
+        widget.selectedCategory!.isNotEmpty) {
       query = query.where('category', isEqualTo: widget.selectedCategory);
     }
 
-    query = query.where('startingBid',
-        isGreaterThanOrEqualTo: widget.selectedPriceRange.start);
-    query = query.where('startingBid',
-        isLessThanOrEqualTo: widget.selectedPriceRange.end);
+    // Filtro pelo nome do produto usando a string de busca (search query)
+    if (widget.searchQuery != null && widget.searchQuery!.isNotEmpty) {
+      query = query
+          .orderBy('productName')
+          .startAt([widget.searchQuery!.toLowerCase()]).endAt(
+              ['${widget.searchQuery!.toLowerCase()}\uf8ff']);
+    }
+
+    // Filtro de faixa de preço
+    if (widget.selectedPriceRange.start > 0 ||
+        widget.selectedPriceRange.end < double.infinity) {
+      query = query
+          .where('startingBid',
+              isGreaterThanOrEqualTo: widget.selectedPriceRange.start)
+          .where('startingBid',
+              isLessThanOrEqualTo: widget.selectedPriceRange.end);
+    }
 
     return query.snapshots();
-  }
-}
-
-class LeilaoScreen extends StatelessWidget {
-  final String leilaoId;
-
-  const LeilaoScreen({super.key, required this.leilaoId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Leilão'),
-      ),
-      body: Center(
-        child: Text('Detalhes do leilão: $leilaoId'),
-      ),
-    );
   }
 }
